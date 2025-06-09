@@ -1,0 +1,47 @@
+project_name: hrbcli
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: hrbcli
+    main: ./cmd/hrbcli
+    binary: hrbcli
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X github.com/pascal71/hrbcli/internal/version.Version={{.Version}}
+      - -X github.com/pascal71/hrbcli/internal/version.BuildTime={{.Date}}
+
+archives:
+  - id: hrbcli
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - LICENSE
+      - docs/*
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'
