@@ -332,6 +332,54 @@ hrbcli replication create prod-pull \
   --direction pull
 ```
 
+#### `hrbcli replication get`
+
+Show details of a replication policy.
+
+```bash
+hrbcli replication get 1
+```
+
+#### `hrbcli replication delete`
+
+Delete a replication policy.
+
+```bash
+hrbcli replication delete 1
+```
+
+#### `hrbcli replication executions`
+
+List executions of a policy.
+
+```bash
+hrbcli replication executions 1
+```
+
+#### `hrbcli replication execution`
+
+Show execution statistics.
+
+```bash
+hrbcli replication execution 10
+```
+
+#### `hrbcli replication logs`
+
+Show logs for an execution.
+
+```bash
+hrbcli replication logs 10
+```
+
+#### `hrbcli replication statistics`
+
+Aggregate statistics across executions.
+
+```bash
+hrbcli replication statistics
+```
+
 #### `hrbcli replication execute`
 
 Execute replication manually.
