@@ -108,8 +108,9 @@ func Debug(format string, args ...interface{}) {
 	}
 }
 
-// FormatSize returns a human readable string for a byte size.
-// Negative values yield "unlimited".
+// FormatSize converts a byte count to a human readable string.
+// Use this helper throughout the CLI when reporting storage quotas.
+// Negative sizes return "unlimited".
 func FormatSize(bytes int64) string {
 	if bytes < 0 {
 		return "unlimited"
