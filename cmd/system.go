@@ -2,23 +2,17 @@ package cmd
 
 import (
 	"fmt"
-
 	"io"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
-
-	"github.com/spf13/cobra"
-
-
 	"strconv"
 
 	"github.com/spf13/cobra"
 
 	"github.com/pascal71/hrbcli/pkg/api"
 	"github.com/pascal71/hrbcli/pkg/harbor"
-
 	"github.com/pascal71/hrbcli/pkg/output"
 )
 
@@ -26,22 +20,15 @@ import (
 func NewSystemCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "system",
-		Short: "System administration tasks",
-		Long:  `Manage Harbor system level tasks like backups and maintenance.`,
-	}
-
-	cmd.AddCommand(newSystemBackupCmd())
-
 		Short: "System administration commands",
 		Long:  `Manage Harbor system operations`,
 	}
 
+	cmd.AddCommand(newSystemBackupCmd())
 	cmd.AddCommand(newSystemStatisticsCmd())
-
 
 	return cmd
 }
-
 
 func newSystemBackupCmd() *cobra.Command {
 	var outputDir string
@@ -50,7 +37,7 @@ func newSystemBackupCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "backup",
 		Short: "Backup Harbor data",
-		Long: `Create a backup of Harbor's database and storage using the community backup script. 
+		Long: `Create a backup of Harbor's database and storage using the community backup script.
 Docker must be installed and the command should be executed on the Harbor host.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if outputDir == "" {
@@ -104,6 +91,8 @@ Docker must be installed and the command should be executed on the Harbor host.`
 	cmd.Flags().StringVar(&outputDir, "dir", ".", "Directory to store the backup archive")
 	cmd.Flags().BoolVar(&dbOnly, "db-only", false, "Backup database only")
 
+	return cmd
+}
 
 func newSystemStatisticsCmd() *cobra.Command {
 	cmd := &cobra.Command{
