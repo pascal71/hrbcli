@@ -6,6 +6,7 @@ bin/
 *.so
 *.dylib
 hrbcli
+!cmd/hrbcli/
 
 # Test binary, built with `go test -c`
 *.test
