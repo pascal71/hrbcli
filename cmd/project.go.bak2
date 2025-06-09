@@ -109,8 +109,8 @@ func newProjectListCmd() *cobra.Command {
 						// Get project summary for quota info
 						summary, err := projectSvc.GetSummary(p.Name)
 						if err == nil && summary.Quota != nil {
-							storageLimit := harbor.FormatStorageSize(summary.Quota.Hard.Storage)
-							storageUsed := harbor.FormatStorageSize(summary.Quota.Used.Storage)
+							storageLimit := output.FormatSize(summary.Quota.Hard.Storage)
+							storageUsed := output.FormatSize(summary.Quota.Used.Storage)
 							row = append(row, storageLimit, storageUsed)
 						} else {
 							row = append(row, "N/A", "N/A")
@@ -353,11 +353,11 @@ func newProjectGetCmd() *cobra.Command {
 					if summary.Quota != nil {
 						fmt.Printf(
 							"  Storage Limit:    %s\n",
-							harbor.FormatStorageSize(summary.Quota.Hard.Storage),
+							output.FormatSize(summary.Quota.Hard.Storage),
 						)
 						fmt.Printf(
 							"  Storage Used:     %s\n",
-							harbor.FormatStorageSize(summary.Quota.Used.Storage),
+							output.FormatSize(summary.Quota.Used.Storage),
 						)
 						if summary.Quota.Hard.Storage > 0 {
 							percentage := float64(
