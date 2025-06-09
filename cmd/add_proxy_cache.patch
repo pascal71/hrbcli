@@ -1,0 +1,51 @@
+--- a/cmd/project.go
++++ b/cmd/project.go
+@@ -120,6 +120,9 @@ func newProjectCreateCmd() *cobra.Command {
+ 		severity       string
+ 		autoScan       bool
+ 		reuseSysCVE    bool
++		proxyCache     bool
++		registryID     int64
++		proxySpeedKB   int64
+ 	)
+ 
+ 	cmd := &cobra.Command{
+@@ -136,7 +139,11 @@ func newProjectCreateCmd() *cobra.Command {
+   hrbcli project create myproject --storage-limit 10G
+ 
+   # Create with security settings
+-  hrbcli project create secure-proj --enable-content-trust --prevent-vulnerable --auto-scan`,
++  hrbcli project create secure-proj --enable-content-trust --prevent-vulnerable --auto-scan
++
++  # Create proxy cache project
++  hrbcli project create docker-cache --proxy-cache --registry-id 1
++  hrbcli project create quay-cache --proxy-cache --registry-id 2 --proxy-speed 1024`,
+ 		Args: cobra.ExactArgs(1),
+ 		RunE: func(cmd *cobra.Command, args []string) error {
+ 			projectName := args[0]
+@@ -192,6 +199,15 @@ func newProjectCreateCmd() *cobra.Command {
+ 			if reuseSysCVE {
+ 				metadata.ReuseSysCVEAllowlist = "true"
+ 			}
++			
++			// Handle proxy cache
++			if proxyCache {
++				if registryID == 0 {
++					return fmt.Errorf("--registry-id is required when creating proxy cache project")
++				}
++				metadata.ProxyRegistryID = fmt.Sprintf("%d", registryID)
++				metadata.ProxySpeedKB = fmt.Sprintf("%d", proxySpeedKB)
++			}
+ 			req.Metadata = metadata
+ 
+ 			// Set limits
+@@ -236,6 +252,9 @@ func newProjectCreateCmd() *cobra.Command {
+ 	cmd.Flags().StringVar(&severity, "severity", "low", "Vulnerability severity threshold (low, medium, high, critical)")
+ 	cmd.Flags().BoolVar(&autoScan, "auto-scan", false, "Automatically scan images on push")
+ 	cmd.Flags().BoolVar(&reuseSysCVE, "reuse-sys-cve", false, "Reuse system CVE allowlist")
++	cmd.Flags().BoolVar(&proxyCache, "proxy-cache", false, "Create as proxy cache project")
++	cmd.Flags().Int64Var(&registryID, "registry-id", 0, "Registry endpoint ID for proxy cache")
++	cmd.Flags().Int64Var(&proxySpeedKB, "proxy-speed", -1, "Proxy cache bandwidth limit in KB/s (-1 for unlimited)")
+ 
+ 	return cmd
+ }
