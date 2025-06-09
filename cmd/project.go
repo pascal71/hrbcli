@@ -149,7 +149,7 @@ func newProjectCreateCmd() *cobra.Command {
 		proxyCache   bool
 		registryID   int64
 		proxySpeedKB int64
-		registryName   string
+		registryName string
 	)
 
 	cmd := &cobra.Command{
@@ -222,41 +222,32 @@ func newProjectCreateCmd() *cobra.Command {
 			if reuseSysCVE {
 				metadata.ReuseSysCVEAllowlist = "true"
 			}
-			// Look up registry by name if provided
-			if proxyCache && registryName != "" && registryID == 0 {
-				registrySvc := harbor.NewRegistryService(client)
-				registries, err := registrySvc.List(nil)
-				if err != nil {
-					return fmt.Errorf("failed to list registries: %w", err)
-				}
-				for _, reg := range registries {
-					if reg.Name == registryName {
-						registryID = reg.ID
-						break
-					}
-				}
-				if registryID == 0 {
-					return fmt.Errorf("registry '%s' not found", registryName)
-				}
-			}
-
 			// Handle proxy cache
 			if proxyCache {
+				// Look up registry by name if provided
+				if registryName != "" && registryID == 0 {
+					registrySvc := harbor.NewRegistryService(client)
+					registries, err := registrySvc.List(nil)
+					if err != nil {
+						return fmt.Errorf("failed to list registries: %w", err)
+					}
+					for _, reg := range registries {
+						if reg.Name == registryName {
+							registryID = reg.ID
+							break
+						}
+					}
+					if registryID == 0 {
+						return fmt.Errorf("registry '%s' not found", registryName)
+					}
+				}
+
 				if registryID == 0 {
 					return fmt.Errorf("--registry-id is required when creating proxy cache project")
 				}
+
 				metadata.ProxySpeedKB = fmt.Sprintf("%d", proxySpeedKB)
-			}
-			
-			// Set registry ID for proxy cache at project level
-			if proxyCache {
 				req.RegistryID = &registryID
-			}
-			if proxyCache {
-				if registryID == 0 {
-					return fmt.Errorf("--registry-id is required when creating proxy cache project")
-				}
-				metadata.ProxySpeedKB = fmt.Sprintf("%d", proxySpeedKB)
 			}
 
 			// Set limits
