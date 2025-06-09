@@ -20,7 +20,7 @@ func NewRegistryService(client *api.Client) *RegistryService {
 // List lists all registry endpoints
 func (s *RegistryService) List(opts *api.ListOptions) ([]*api.Registry, error) {
 	params := make(map[string]string)
-	
+
 	if opts != nil {
 		if opts.Query != "" {
 			params["q"] = opts.Query
@@ -32,17 +32,17 @@ func (s *RegistryService) List(opts *api.ListOptions) ([]*api.Registry, error) {
 			params["page_size"] = fmt.Sprintf("%d", opts.PageSize)
 		}
 	}
-	
+
 	resp, err := s.client.Get("/registries", params)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var registries []*api.Registry
 	if err := s.client.DecodeResponse(resp, &registries); err != nil {
 		return nil, fmt.Errorf("failed to decode registries: %w", err)
 	}
-	
+
 	return registries, nil
 }
 
@@ -52,12 +52,12 @@ func (s *RegistryService) Get(id int64) (*api.Registry, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var registry api.Registry
 	if err := s.client.DecodeResponse(resp, &registry); err != nil {
 		return nil, fmt.Errorf("failed to decode registry: %w", err)
 	}
-	
+
 	return &registry, nil
 }
 
@@ -68,23 +68,23 @@ func (s *RegistryService) Create(req *api.RegistryReq) (*api.Registry, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusCreated {
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
-	
+
 	// Get location header to find the created registry ID
 	location := resp.Header.Get("Location")
 	if location == "" {
 		return nil, fmt.Errorf("no location header in response")
 	}
-	
+
 	// Extract ID from location (format: /api/v2.0/registries/{id})
 	var id int64
 	if _, err := fmt.Sscanf(location, "/api/v2.0/registries/%d", &id); err != nil {
 		return nil, fmt.Errorf("failed to parse registry ID from location: %s", location)
 	}
-	
+
 	// Get the created registry
 	return s.Get(id)
 }
@@ -96,11 +96,11 @@ func (s *RegistryService) Update(id int64, req *api.RegistryReq) error {
 		return err
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
-	
+
 	return nil
 }
 
@@ -111,11 +111,11 @@ func (s *RegistryService) Delete(id int64) error {
 		return err
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
-	
+
 	return nil
 }
 
@@ -126,7 +126,7 @@ func (s *RegistryService) Ping(req *api.RegistryReq) error {
 		return err
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		var pingResp api.RegistryPing
 		if err := s.client.DecodeResponse(resp, &pingResp); err == nil && pingResp.Reason != "" {
@@ -134,36 +134,38 @@ func (s *RegistryService) Ping(req *api.RegistryReq) error {
 		}
 		return fmt.Errorf("ping failed with status: %d", resp.StatusCode)
 	}
-	
+
 	return nil
 }
 
 // GetInfo gets registry adapter information
+// Harbor 2.6+ exposes adapter info under `/replication/adapterinfos/{type}`
 func (s *RegistryService) GetInfo(registryType string) (*api.RegistryInfo, error) {
-	resp, err := s.client.Get(fmt.Sprintf("/replication/adapters/%s", registryType), nil)
+	resp, err := s.client.Get(fmt.Sprintf("/replication/adapterinfos/%s", registryType), nil)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var info api.RegistryInfo
 	if err := s.client.DecodeResponse(resp, &info); err != nil {
 		return nil, fmt.Errorf("failed to decode registry info: %w", err)
 	}
-	
+
 	return &info, nil
 }
 
+// Use `/replication/adapterinfos` to get adapter details in newer Harbor versions.
 // ListAdapters lists available registry adapters
 func (s *RegistryService) ListAdapters() (map[string]*api.RegistryInfo, error) {
-	resp, err := s.client.Get("/replication/adapters", nil)
+	resp, err := s.client.Get("/replication/adapterinfos", nil)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var adapters map[string]*api.RegistryInfo
 	if err := s.client.DecodeResponse(resp, &adapters); err != nil {
 		return nil, fmt.Errorf("failed to decode adapters: %w", err)
 	}
-	
+
 	return adapters, nil
 }
