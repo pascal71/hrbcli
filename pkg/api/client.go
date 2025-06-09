@@ -3,6 +3,7 @@ package api
 import (
 	"bytes"
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -51,20 +52,25 @@ func NewClient() (*Client, error) {
 		}
 	}
 
-	return &Client{
+	client := &Client{
 		BaseURL:    baseURL,
 		Username:   cfg.Username,
 		Password:   cfg.Password,
 		APIVersion: cfg.APIVersion,
 		HTTPClient: httpClient,
 		Debug:      cfg.Debug,
-	}, nil
+	}
+
+	// Ensure global debug matches configuration
+	output.SetDebug(cfg.Debug)
+
+	return client, nil
 }
 
 // Request makes an HTTP request to the Harbor API
 func (c *Client) Request(method, path string, body interface{}) (*http.Response, error) {
 	// Build URL
-	url := fmt.Sprintf("%s/api/%s%s", c.BaseURL, c.APIVersion, path)
+	fullURL := fmt.Sprintf("%s/api/%s%s", c.BaseURL, c.APIVersion, path)
 
 	// Prepare body
 	var bodyReader io.Reader
@@ -74,14 +80,14 @@ func (c *Client) Request(method, path string, body interface{}) (*http.Response,
 			return nil, fmt.Errorf("failed to marshal request body: %w", err)
 		}
 		bodyReader = bytes.NewReader(jsonBody)
-		
+
 		if c.Debug {
 			output.Debug("Request body: %s", string(jsonBody))
 		}
 	}
 
 	// Create request
-	req, err := http.NewRequest(method, url, bodyReader)
+	req, err := http.NewRequest(method, fullURL, bodyReader)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -98,12 +104,19 @@ func (c *Client) Request(method, path string, body interface{}) (*http.Response,
 	}
 
 	if c.Debug {
-		output.Debug("%s %s", method, url)
+		output.Debug("%s %s", method, fullURL)
 	}
 
 	// Make request
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
+		// Provide clearer error for TLS verification failures
+		if urlErr, ok := err.(*url.Error); ok {
+			switch urlErr.Err.(type) {
+			case x509.UnknownAuthorityError, x509.HostnameError, x509.CertificateInvalidError:
+				return nil, fmt.Errorf("TLS certificate verification failed: %w", urlErr.Err)
+			}
+		}
 		return nil, fmt.Errorf("request failed: %w", err)
 	}
 
@@ -115,12 +128,12 @@ func (c *Client) Request(method, path string, body interface{}) (*http.Response,
 	if resp.StatusCode >= 400 {
 		defer resp.Body.Close()
 		bodyBytes, _ := io.ReadAll(resp.Body)
-		
+
 		var apiErr APIError
 		if err := json.Unmarshal(bodyBytes, &apiErr); err == nil && apiErr.Message != "" {
 			return nil, &apiErr
 		}
-		
+
 		return nil, &APIError{
 			Code:    resp.StatusCode,
 			Message: string(bodyBytes),
@@ -165,7 +178,7 @@ func (c *Client) Head(path string) (*http.Response, error) {
 // DecodeResponse decodes a JSON response
 func (c *Client) DecodeResponse(resp *http.Response, v interface{}) error {
 	defer resp.Body.Close()
-	
+
 	if c.Debug {
 		// Read body for debugging
 		bodyBytes, err := io.ReadAll(resp.Body)
@@ -173,11 +186,11 @@ func (c *Client) DecodeResponse(resp *http.Response, v interface{}) error {
 			return fmt.Errorf("failed to read response body: %w", err)
 		}
 		output.Debug("Response body: %s", string(bodyBytes))
-		
+
 		// Decode from bytes
 		return json.Unmarshal(bodyBytes, v)
 	}
-	
+
 	// Direct decode
 	return json.NewDecoder(resp.Body).Decode(v)
 }
