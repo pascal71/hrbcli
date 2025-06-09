@@ -2,23 +2,17 @@ package cmd
 
 import (
 	"fmt"
-
 	"io"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
-
-	"github.com/spf13/cobra"
-
-
 	"strconv"
 
 	"github.com/spf13/cobra"
 
 	"github.com/pascal71/hrbcli/pkg/api"
 	"github.com/pascal71/hrbcli/pkg/harbor"
-
 	"github.com/pascal71/hrbcli/pkg/output"
 )
 
@@ -26,22 +20,15 @@ import (
 func NewSystemCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "system",
-		Short: "System administration tasks",
-		Long:  `Manage Harbor system level tasks like backups and maintenance.`,
+		Short: "System administration commands",
+		Long:  `Manage Harbor system operations including backups and statistics.`,
 	}
 
 	cmd.AddCommand(newSystemBackupCmd())
-
-		Short: "System administration commands",
-		Long:  `Manage Harbor system operations`,
-	}
-
 	cmd.AddCommand(newSystemStatisticsCmd())
-
 
 	return cmd
 }
-
 
 func newSystemBackupCmd() *cobra.Command {
 	var outputDir string
@@ -56,7 +43,7 @@ Docker must be installed and the command should be executed on the Harbor host.`
 			if outputDir == "" {
 				outputDir = "."
 			}
-			if err := os.MkdirAll(outputDir, 0755); err != nil {
+			if err := os.MkdirAll(outputDir, 0o755); err != nil {
 				return fmt.Errorf("failed to create output directory: %w", err)
 			}
 
@@ -78,7 +65,7 @@ Docker must be installed and the command should be executed on the Harbor host.`
 			}
 			f.Close()
 
-			if err := os.Chmod(scriptPath, 0755); err != nil {
+			if err := os.Chmod(scriptPath, 0o755); err != nil {
 				return fmt.Errorf("failed to make script executable: %w", err)
 			}
 
@@ -104,6 +91,8 @@ Docker must be installed and the command should be executed on the Harbor host.`
 	cmd.Flags().StringVar(&outputDir, "dir", ".", "Directory to store the backup archive")
 	cmd.Flags().BoolVar(&dbOnly, "db-only", false, "Backup database only")
 
+	return cmd
+}
 
 func newSystemStatisticsCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -129,7 +118,17 @@ func newSystemStatisticsCmd() *cobra.Command {
 				return output.YAML(stats)
 			default:
 				table := output.Table()
-				table.Append([]string{"PRIVATE PROJECTS", "PUBLIC PROJECTS", "TOTAL PROJECTS", "PRIVATE REPOS", "PUBLIC REPOS", "TOTAL REPOS", "STORAGE"})
+				table.Append(
+					[]string{
+						"PRIVATE PROJECTS",
+						"PUBLIC PROJECTS",
+						"TOTAL PROJECTS",
+						"PRIVATE REPOS",
+						"PUBLIC REPOS",
+						"TOTAL REPOS",
+						"STORAGE",
+					},
+				)
 				table.Append([]string{
 					strconv.FormatInt(stats.PrivateProjectCount, 10),
 					strconv.FormatInt(stats.PublicProjectCount, 10),
