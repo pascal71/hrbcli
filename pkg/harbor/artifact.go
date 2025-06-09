@@ -38,3 +38,37 @@ func (s *ArtifactService) Scan(project, repository, reference string, scanType s
 
 	return nil
 }
+
+// Vulnerabilities retrieves the vulnerability report for the specified artifact
+func (s *ArtifactService) Vulnerabilities(project, repository, reference string) (*api.VulnerabilityReport, error) {
+	path := fmt.Sprintf("/projects/%s/repositories/%s/artifacts/%s/additions/vulnerabilities", project, repository, reference)
+
+	resp, err := s.client.Get(path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var report api.VulnerabilityReport
+	if err := s.client.DecodeResponse(resp, &report); err != nil {
+		return nil, fmt.Errorf("failed to decode vulnerability report: %w", err)
+	}
+
+	return &report, nil
+}
+
+// SBOM retrieves the SBOM report for the specified artifact
+func (s *ArtifactService) SBOM(project, repository, reference string) (map[string]interface{}, error) {
+	path := fmt.Sprintf("/projects/%s/repositories/%s/artifacts/%s/additions/sbom", project, repository, reference)
+
+	resp, err := s.client.Get(path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var report map[string]interface{}
+	if err := s.client.DecodeResponse(resp, &report); err != nil {
+		return nil, fmt.Errorf("failed to decode SBOM: %w", err)
+	}
+
+	return report, nil
+}
