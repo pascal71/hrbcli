@@ -15,8 +15,6 @@ GOFILES := $(wildcard *.go)
 # Build targets
 TARGETS := darwin/amd64 darwin/arm64 linux/amd64 linux/arm64 windows/amd64
 
-# Use linker flags to provide version/build settings
-LDFLAGS=-ldflags "-X=${MODULE_NAME}/internal/version.Version=$(VERSION) -X=${MODULE_NAME}/internal/version.BuildTime=$(BUILD_TIME)"
 
 # Default target
 .PHONY: all
