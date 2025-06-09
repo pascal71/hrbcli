@@ -2,6 +2,7 @@ package harbor
 
 import (
 	"fmt"
+	"net/url"
 	"strconv"
 
 	"github.com/pascal71/hrbcli/pkg/api"
@@ -47,4 +48,23 @@ func (s *RepositoryService) List(projectName string, opts *api.ListOptions) ([]*
 	}
 
 	return repos, nil
+}
+
+// Get retrieves a repository by name within a project
+func (s *RepositoryService) Get(projectName, repositoryName string) (*api.Repository, error) {
+	projectEsc := url.PathEscape(projectName)
+	repoEsc := url.PathEscape(repositoryName)
+	path := fmt.Sprintf("/projects/%s/repositories/%s", projectEsc, repoEsc)
+
+	resp, err := s.client.Get(path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var repo api.Repository
+	if err := s.client.DecodeResponse(resp, &repo); err != nil {
+		return nil, fmt.Errorf("failed to decode repository: %w", err)
+	}
+
+	return &repo, nil
 }
