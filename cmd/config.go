@@ -1,15 +1,19 @@
 package cmd
 
 import (
+	"crypto/tls"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 
+	"github.com/pascal71/hrbcli/pkg/api"
 	"github.com/pascal71/hrbcli/pkg/config"
 	"github.com/pascal71/hrbcli/pkg/output"
 )
@@ -130,9 +134,28 @@ func newConfigInitCmd() *cobra.Command {
 			}
 
 			if verify == "yes" {
-				// TODO: Implement connection test
 				output.Info("Testing connection to Harbor...")
-				output.Success("Successfully connected to Harbor!")
+
+				httpClient := &http.Client{Timeout: 10 * time.Second}
+				if insecure {
+					httpClient.Transport = &http.Transport{
+						TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+					}
+				}
+
+				client := &api.Client{
+					BaseURL:    strings.TrimRight(harborURL, "/"),
+					Username:   username,
+					Password:   password,
+					APIVersion: apiVersion,
+					HTTPClient: httpClient,
+				}
+
+				if err := client.CheckHealth(); err != nil {
+					output.Error("Connection failed: %v", err)
+				} else {
+					output.Success("Successfully connected to Harbor!")
+				}
 			}
 
 			// Save configuration
