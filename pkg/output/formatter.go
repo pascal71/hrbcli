@@ -108,8 +108,8 @@ func Debug(format string, args ...interface{}) {
 	}
 }
 
-// FormatSize formats bytes into human readable format. A negative value
-// returns "unlimited".
+// FormatSize returns a human readable string for a byte size.
+// Negative values yield "unlimited".
 func FormatSize(bytes int64) string {
 	if bytes < 0 {
 		return "unlimited"
