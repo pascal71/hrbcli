@@ -99,6 +99,7 @@ type User struct {
 	SysadminFlag    bool      `json:"sysadmin_flag"`
 	CreationTime    time.Time `json:"creation_time"`
 	UpdateTime      time.Time `json:"update_time"`
+
 }
 
 // UserReq represents a request to create or update a user
@@ -120,6 +121,7 @@ type UserProfile struct {
 // SysAdminFlag is used to set or unset Harbor admin privilege
 type SysAdminFlag struct {
 	SysadminFlag bool `json:"sysadmin_flag"`
+
 }
 
 // SystemInfo represents Harbor system information
@@ -149,4 +151,16 @@ type ListOptions struct {
 	PageSize int    `json:"page_size,omitempty"`
 	Query    string `json:"q,omitempty"`
 	Sort     string `json:"sort,omitempty"`
+}
+
+// Repository represents a Harbor repository
+type Repository struct {
+	ID            int64     `json:"id"`
+	ProjectID     int64     `json:"project_id"`
+	Name          string    `json:"name"`
+	Description   string    `json:"description"`
+	ArtifactCount int64     `json:"artifact_count"`
+	PullCount     int64     `json:"pull_count"`
+	CreationTime  time.Time `json:"creation_time"`
+	UpdateTime    time.Time `json:"update_time"`
 }
