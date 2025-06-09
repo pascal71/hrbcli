@@ -185,6 +185,25 @@ $ hrbcli replication execution 122
 $ hrbcli replication logs 122
 ```
 
+## Proxy Cache
+
+### Set Up a Proxy Cache Project
+
+```bash
+# Create a registry endpoint for Docker Hub
+hrbcli registry create dockerhub --type docker-hub --url https://hub.docker.com
+
+# Create the proxy cache project referencing that registry
+hrbcli project create mycache \
+    --proxy-cache \
+    --registry-name dockerhub \
+    --proxy-speed -1
+```
+
+The CLI resolves the registry ID automatically when `--registry-name` is
+provided. There is currently no option to set a TTL or expiry time for cached
+content.
+
 ## Automation Scripts
 
 ### Promote Images Through Environments
