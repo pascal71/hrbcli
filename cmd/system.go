@@ -37,7 +37,7 @@ func newSystemBackupCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "backup",
 		Short: "Backup Harbor data",
-		Long: `Create a backup of Harbor's database and storage using the community backup script. 
+		Long: `Create a backup of Harbor's database and storage using the community backup script.
 Docker must be installed and the command should be executed on the Harbor host.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if outputDir == "" {
