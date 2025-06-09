@@ -99,6 +99,29 @@ type User struct {
 	SysadminFlag    bool      `json:"sysadmin_flag"`
 	CreationTime    time.Time `json:"creation_time"`
 	UpdateTime      time.Time `json:"update_time"`
+
+}
+
+// UserReq represents a request to create or update a user
+type UserReq struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password,omitempty"`
+	Realname string `json:"realname,omitempty"`
+	Comment  string `json:"comment,omitempty"`
+}
+
+// UserProfile represents a user profile update
+type UserProfile struct {
+	Email    string `json:"email"`
+	Realname string `json:"realname"`
+	Comment  string `json:"comment"`
+}
+
+// SysAdminFlag is used to set or unset Harbor admin privilege
+type SysAdminFlag struct {
+	SysadminFlag bool `json:"sysadmin_flag"`
+
 }
 
 // SystemInfo represents Harbor system information

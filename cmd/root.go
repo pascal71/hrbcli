@@ -91,6 +91,8 @@ func init() {
 	// Add commands - we'll implement these next
 	rootCmd.AddCommand(NewProjectCmd())
 	rootCmd.AddCommand(NewRegistryCmd())
+	rootCmd.AddCommand(NewUserCmd())
+	// rootCmd.AddCommand(NewRepositoryCmd())
 	rootCmd.AddCommand(NewRepositoryCmd())
 	// rootCmd.AddCommand(NewUserCmd())
 	// rootCmd.AddCommand(NewSystemCmd())
