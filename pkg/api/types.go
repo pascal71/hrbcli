@@ -99,7 +99,6 @@ type User struct {
 	SysadminFlag    bool      `json:"sysadmin_flag"`
 	CreationTime    time.Time `json:"creation_time"`
 	UpdateTime      time.Time `json:"update_time"`
-
 }
 
 // UserReq represents a request to create or update a user
@@ -121,7 +120,6 @@ type UserProfile struct {
 // SysAdminFlag is used to set or unset Harbor admin privilege
 type SysAdminFlag struct {
 	SysadminFlag bool `json:"sysadmin_flag"`
-
 }
 
 // SystemInfo represents Harbor system information
@@ -136,6 +134,17 @@ type SystemInfo struct {
 	WithNotary                  bool   `json:"with_notary"`
 	WithChartmuseum             bool   `json:"with_chartmuseum"`
 	RegistryStorageProviderName string `json:"registry_storage_provider_name"`
+}
+
+// Statistic represents Harbor statistics information
+type Statistic struct {
+	PrivateProjectCount     int64 `json:"private_project_count"`
+	PrivateRepoCount        int64 `json:"private_repo_count"`
+	PublicProjectCount      int64 `json:"public_project_count"`
+	PublicRepoCount         int64 `json:"public_repo_count"`
+	TotalProjectCount       int64 `json:"total_project_count"`
+	TotalRepoCount          int64 `json:"total_repo_count"`
+	TotalStorageConsumption int64 `json:"total_storage_consumption"`
 }
 
 // Pagination represents pagination information

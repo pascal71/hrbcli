@@ -75,6 +75,9 @@ hrbcli repo delete myproject/myapp:v1.0.0
 
 # Get system information
 hrbcli system info
+
+# Show Harbor statistics
+hrbcli system statistics
 ```
 
 ## Configuration
