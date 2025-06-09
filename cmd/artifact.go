@@ -20,6 +20,8 @@ func NewArtifactCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(newArtifactScanCmd())
+	cmd.AddCommand(newArtifactVulnCmd())
+	cmd.AddCommand(newArtifactSbomCmd())
 
 	return cmd
 }
@@ -82,4 +84,114 @@ func parseArtifactRef(input string) (string, string, string, error) {
 	}
 
 	return project, repo, ref, nil
+}
+
+func newArtifactVulnCmd() *cobra.Command {
+	var severity string
+
+	cmd := &cobra.Command{
+		Use:   "vulnerabilities <project>/<repository>[:tag|@digest]",
+		Short: "Show vulnerability report",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			project, repo, ref, err := parseArtifactRef(args[0])
+			if err != nil {
+				return err
+			}
+
+			client, err := api.NewClient()
+			if err != nil {
+				return err
+			}
+
+			artSvc := harbor.NewArtifactService(client)
+			report, err := artSvc.Vulnerabilities(project, repo, ref)
+			if err != nil {
+				return fmt.Errorf("failed to get vulnerabilities: %w", err)
+			}
+
+			if report == nil || len(report.Vulnerabilities) == 0 {
+				output.Info("No vulnerabilities found")
+				return nil
+			}
+
+			sevOrder := map[string]int{"none": 0, "negligible": 1, "low": 2, "medium": 3, "high": 4, "critical": 5}
+			var vulns []api.VulnerabilityItem
+			normalized := strings.ToLower(severity)
+			for _, v := range report.Vulnerabilities {
+				if normalized != "" {
+					if sevOrder[strings.ToLower(v.Severity)] < sevOrder[normalized] {
+						continue
+					}
+				}
+				vulns = append(vulns, v)
+			}
+
+			if len(vulns) == 0 {
+				output.Info("No vulnerabilities found")
+			} else {
+				switch output.GetFormat() {
+				case "json":
+					return output.JSON(vulns)
+				case "yaml":
+					return output.YAML(vulns)
+				default:
+					table := output.Table()
+					table.Append([]string{"SEVERITY", "CVE", "PACKAGE", "VERSION", "FIXED VERSION"})
+					for _, v := range vulns {
+						table.Append([]string{v.Severity, v.CVEID, v.Package, v.Version, v.FixedVersion})
+					}
+					table.Render()
+				}
+			}
+
+			if normalized != "" && len(vulns) > 0 {
+				return fmt.Errorf("vulnerabilities with severity >= %s found", severity)
+			}
+			return nil
+		},
+	}
+
+	cmd.Flags().StringVar(&severity, "severity", "", "Fail if vulnerabilities of this severity or higher are found")
+
+	return cmd
+}
+
+func newArtifactSbomCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "sbom <project>/<repository>[:tag|@digest]",
+		Short: "Show SBOM report",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			project, repo, ref, err := parseArtifactRef(args[0])
+			if err != nil {
+				return err
+			}
+
+			client, err := api.NewClient()
+			if err != nil {
+				return err
+			}
+
+			artSvc := harbor.NewArtifactService(client)
+			report, err := artSvc.SBOM(project, repo, ref)
+			if err != nil {
+				return fmt.Errorf("failed to get SBOM: %w", err)
+			}
+
+			if len(report) == 0 {
+				output.Info("No SBOM data found")
+				return nil
+			}
+
+			switch output.GetFormat() {
+			case "yaml":
+				return output.YAML(report)
+			default:
+				return output.JSON(report)
+			}
+		},
+	}
+
+	return cmd
 }

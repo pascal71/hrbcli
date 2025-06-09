@@ -155,6 +155,26 @@ hrbcli artifact scan myproject/myapp@sha256:abc123
 hrbcli artifact scan myproject/myapp --all
 ```
 
+#### `hrbcli artifact vulnerabilities`
+
+Show vulnerability report for an artifact. Use `--severity` to fail if vulnerabilities of that level or higher exist.
+
+```bash
+# Show vulnerabilities
+hrbcli artifact vulnerabilities myproject/myapp:latest
+
+# Fail if high or critical vulns found
+hrbcli artifact vulnerabilities myproject/myapp:latest --severity high
+```
+
+#### `hrbcli artifact sbom`
+
+Display the SBOM report for an artifact.
+
+```bash
+hrbcli artifact sbom myproject/myapp:latest -o json
+```
+
 #### `hrbcli artifact copy`
 
 Copy artifacts between projects.
