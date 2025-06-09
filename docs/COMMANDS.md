@@ -96,6 +96,18 @@ hrbcli repo list myproject --detail
 hrbcli repo list myproject --filter "app*"
 ```
 
+#### `hrbcli repo get`
+
+Show details for a repository.
+
+```bash
+# Get repository information
+hrbcli repo get myproject/myapp
+
+# Include creation/update timestamps
+hrbcli repo get myproject/myapp --detail
+```
+
 #### `hrbcli repo delete`
 
 Delete a repository.
