@@ -248,6 +248,18 @@ hrbcli system info --with-storage
 hrbcli system info -o yaml
 ```
 
+#### `hrbcli system statistics`
+
+Show general Harbor statistics.
+
+```bash
+# Display statistics
+hrbcli system statistics
+
+# Output as JSON
+hrbcli system statistics -o json
+```
+
 #### `hrbcli system health`
 
 Check system health.
