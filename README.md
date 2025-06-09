@@ -75,6 +75,9 @@ hrbcli repo delete myproject/myapp:v1.0.0
 
 # Get system information
 hrbcli system info
+
+# Backup Harbor
+hrbcli system backup --dir /backups
 ```
 
 ## Configuration

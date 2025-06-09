@@ -256,6 +256,18 @@ hrbcli system gc history
 hrbcli system gc status <job-id>
 ```
 
+#### `hrbcli system backup`
+
+Create a backup of Harbor data and configuration. Docker must be available on the host running the command.
+
+```bash
+# Backup Harbor using default settings
+hrbcli system backup
+
+# Store the backup under /backups
+hrbcli system backup --dir /backups
+```
+
 ### Replication
 
 #### `hrbcli replication list`
