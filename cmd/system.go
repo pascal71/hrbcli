@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"sort"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -81,7 +80,7 @@ func newSystemStatisticsCmd() *cobra.Command {
 
 func newSystemConfigCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "config",
+		Use: "config",
 
 		Short: "Manage Harbor system configuration",
 	}
@@ -93,11 +92,11 @@ func newSystemConfigCmd() *cobra.Command {
 
 func newSystemConfigGetCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "get [key]",
+		Use: "get [key]",
 
 		Short: "Get Harbor system configuration",
 
-		Args:  cobra.MaximumNArgs(1),
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := api.NewClient()
 			if err != nil {

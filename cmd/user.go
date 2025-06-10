@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -147,6 +148,13 @@ func newUserCreateCmd() *cobra.Command {
 
 			user, err := userSvc.Create(req)
 			if err != nil {
+				if apiErr, ok := err.(*api.APIError); ok && apiErr.IsConflict() {
+					msg := apiErr.FriendlyMessage()
+					if msg == "" {
+						msg = "user or email already exists"
+					}
+					return errors.New(msg)
+				}
 				return fmt.Errorf("failed to create user: %w", err)
 			}
 

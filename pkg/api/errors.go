@@ -12,6 +12,21 @@ type APIError struct {
 	Details map[string]interface{} `json:"details,omitempty"`
 }
 
+// FriendlyMessage attempts to extract a human-friendly message from the
+// underlying Harbor API error response. If the message contains a JSON
+// structure like {"errors":[{"message":"..."}]}, the first message is returned.
+func (e *APIError) FriendlyMessage() string {
+	var wrapper struct {
+		Errors []struct {
+			Message string `json:"message"`
+		} `json:"errors"`
+	}
+	if err := json.Unmarshal([]byte(e.Message), &wrapper); err == nil && len(wrapper.Errors) > 0 {
+		return wrapper.Errors[0].Message
+	}
+	return e.Message
+}
+
 // Error implements the error interface
 func (e *APIError) Error() string {
 	if e.Details != nil {
