@@ -84,6 +84,16 @@ hrbcli system statistics
 
 ```
 
+### Scanner Commands
+
+```bash
+hrbcli scanner scan <project>
+hrbcli scanner running <project>
+hrbcli scanner reports <project> --summary
+```
+
+See [docs/COMMANDS.md](docs/COMMANDS.md) for more details.
+
 ## Configuration
 
 Harbor CLI can be configured through:
