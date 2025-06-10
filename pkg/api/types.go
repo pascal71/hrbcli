@@ -213,3 +213,12 @@ type ArtifactListOptions struct {
 	WithSignature    bool `json:"-"`
 	WithScanOverview bool `json:"-"`
 }
+
+// ArtifactGetOptions represents options when retrieving a single artifact
+// to include additional details like scan overview.
+type ArtifactGetOptions struct {
+	WithTag          bool `json:"-"`
+	WithLabel        bool `json:"-"`
+	WithSignature    bool `json:"-"`
+	WithScanOverview bool `json:"-"`
+}
