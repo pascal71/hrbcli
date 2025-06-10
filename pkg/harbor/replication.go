@@ -18,6 +18,22 @@ func NewReplicationService(client *api.Client) *ReplicationService {
 	return &ReplicationService{client: client}
 }
 
+// ResolvePolicyID resolves a replication policy ID from its name.
+// Returns an error if the policy cannot be found.
+func (s *ReplicationService) ResolvePolicyID(name string) (int64, error) {
+	opts := &api.ListOptions{Query: fmt.Sprintf("name=~%s", name)}
+	policies, err := s.ListPolicies(opts)
+	if err != nil {
+		return 0, err
+	}
+	for _, p := range policies {
+		if p.Name == name {
+			return p.ID, nil
+		}
+	}
+	return 0, fmt.Errorf("replication policy '%s' not found", name)
+}
+
 // ListPolicies lists replication policies
 func (s *ReplicationService) ListPolicies(opts *api.ListOptions) ([]*api.ReplicationPolicy, error) {
 	params := make(map[string]string)
