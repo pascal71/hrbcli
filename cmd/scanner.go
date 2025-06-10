@@ -19,6 +19,7 @@ func NewScannerCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(newScannerRunningCmd())
+
 	cmd.AddCommand(newScannerScanCmd())
 
 	return cmd
@@ -115,6 +116,7 @@ func newScannerRunningCmd() *cobra.Command {
 	return cmd
 }
 
+
 func newScannerScanCmd() *cobra.Command {
 	var scanType string
 
@@ -171,3 +173,4 @@ func newScannerScanCmd() *cobra.Command {
 
 	return cmd
 }
+
