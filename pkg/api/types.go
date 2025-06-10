@@ -202,3 +202,13 @@ type ExtraAttrs struct {
 	Architecture string `json:"architecture"`
 	OS           string `json:"os"`
 }
+
+// ArtifactListOptions represents options when listing artifacts
+type ArtifactListOptions struct {
+	Page             int  `json:"page,omitempty"`
+	PageSize         int  `json:"page_size,omitempty"`
+	WithTag          bool `json:"-"`
+	WithLabel        bool `json:"-"`
+	WithSignature    bool `json:"-"`
+	WithScanOverview bool `json:"-"`
+}
