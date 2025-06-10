@@ -11,9 +11,11 @@ type VulnerabilityReport struct {
 // VulnerabilitySummary contains summary information about the
 // vulnerabilities found in a scan.
 type VulnerabilitySummary struct {
+
 	Total   int            `json:"total"`
 	Fixable int            `json:"fixable"`
 	Summary map[string]int `json:"summary"`
+
 }
 
 // VulnerabilityItem represents a single vulnerability entry

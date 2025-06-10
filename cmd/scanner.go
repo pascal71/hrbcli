@@ -264,13 +264,16 @@ func newScannerReportsCmd() *cobra.Command {
 			default:
 				table := output.Table()
 				if summary {
+
 					table.Append([]string{"REPOSITORY", "REFERENCE", "SCANNER", "STATUS", "TOTAL", "CRITICAL", "HIGH", "MEDIUM", "LOW"})
+
 					for _, e := range reports {
 						overview, ok := e.Report.(map[string]api.NativeReportSummary)
 						if !ok {
 							continue
 						}
 						for name, ov := range overview {
+
 							sum := ov.Summary.Summary
 							table.Append([]string{
 								e.Repository,
@@ -283,6 +286,7 @@ func newScannerReportsCmd() *cobra.Command {
 								fmt.Sprintf("%d", sum["Medium"]),
 								fmt.Sprintf("%d", sum["Low"]),
 							})
+
 						}
 					}
 				} else if strings.ToLower(reportType) == "sbom" {
@@ -298,11 +302,13 @@ func newScannerReportsCmd() *cobra.Command {
 							table.Append([]string{e.Repository, e.Reference, ""})
 							continue
 						}
+
 						count := len(rep.Vulnerabilities)
 						if count == 0 && rep.Summary.Total > 0 {
 							count = rep.Summary.Total
 						}
 						table.Append([]string{e.Repository, e.Reference, fmt.Sprintf("%d", count)})
+
 					}
 				}
 				table.Render()
