@@ -27,29 +27,29 @@ func GetConfigPath() string {
 	if cfgFile := viper.ConfigFileUsed(); cfgFile != "" {
 		return cfgFile
 	}
-	
+
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return ""
 	}
-	
+
 	return filepath.Join(home, ".hrbcli.yaml")
 }
 
 // Load loads the configuration from file
 func Load() (*Config, error) {
 	cfg := &Config{
-		HarborURL:    viper.GetString("harbor_url"),
-		Username:     viper.GetString("username"),
-		Password:     viper.GetString("password"),
-		APIVersion:   viper.GetString("api_version"),
-		Insecure:     viper.GetBool("insecure"),
-		OutputFormat: viper.GetString("output_format"),
+		HarborURL:      viper.GetString("harbor_url"),
+		Username:       viper.GetString("username"),
+		Password:       viper.GetString("password"),
+		APIVersion:     viper.GetString("api_version"),
+		Insecure:       viper.GetBool("insecure"),
+		OutputFormat:   viper.GetString("output_format"),
 		DefaultProject: viper.GetString("default_project"),
-		NoColor:      viper.GetBool("no_color"),
-		Debug:        viper.GetBool("debug"),
+		NoColor:        viper.GetBool("no_color"),
+		Debug:          viper.GetBool("debug"),
 	}
-	
+
 	// Set defaults
 	if cfg.APIVersion == "" {
 		cfg.APIVersion = "v2.0"
@@ -57,48 +57,48 @@ func Load() (*Config, error) {
 	if cfg.OutputFormat == "" {
 		cfg.OutputFormat = "table"
 	}
-	
+
 	return cfg, nil
 }
 
 // Save saves the configuration to file
 func Save(cfg *Config) error {
 	configPath := GetConfigPath()
-	
+
 	// Create directory if it doesn't exist
 	dir := filepath.Dir(configPath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return fmt.Errorf("failed to create config directory: %w", err)
 	}
-	
+
 	// Don't save password to file
 	cfgToSave := *cfg
 	cfgToSave.Password = ""
-	
+
 	// Marshal to YAML
 	data, err := yaml.Marshal(&cfgToSave)
 	if err != nil {
 		return fmt.Errorf("failed to marshal config: %w", err)
 	}
-	
+
 	// Write to file with restricted permissions
 	if err := os.WriteFile(configPath, data, 0600); err != nil {
 		return fmt.Errorf("failed to write config file: %w", err)
 	}
-	
+
 	return nil
 }
 
 // Set sets a configuration value
 func Set(key string, value interface{}) error {
 	viper.Set(key, value)
-	
+
 	// Load current config
 	cfg, err := Load()
 	if err != nil {
 		return err
 	}
-	
+
 	// Update the specific field
 	switch key {
 	case "harbor_url":
@@ -122,7 +122,7 @@ func Set(key string, value interface{}) error {
 	default:
 		return fmt.Errorf("unknown configuration key: %s", key)
 	}
-	
+
 	// Save to file
 	return Save(cfg)
 }
@@ -147,7 +147,7 @@ func ValidateConfig() error {
 	if viper.GetString("harbor_url") == "" {
 		return fmt.Errorf("harbor_url is required")
 	}
-	
+
 	// Validate output format
 	format := viper.GetString("output_format")
 	switch format {
@@ -156,6 +156,6 @@ func ValidateConfig() error {
 	default:
 		return fmt.Errorf("invalid output format: %s (valid: table, json, yaml)", format)
 	}
-	
+
 	return nil
 }
