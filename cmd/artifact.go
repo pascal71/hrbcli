@@ -199,7 +199,8 @@ func newArtifactListCmd() *cobra.Command {
 			}
 
 			for _, r := range repos {
-				arts, err := artSvc.List(project, r.Name, opts)
+				repoName := strings.TrimPrefix(r.Name, project+"/")
+				arts, err := artSvc.List(project, repoName, opts)
 				if err != nil {
 					return fmt.Errorf("failed to list artifacts for %s: %w", r.Name, err)
 				}
