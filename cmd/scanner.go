@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -181,6 +182,8 @@ func newScannerReportsCmd() *cobra.Command {
 	var reportType string
 	var summary bool
 	var outputDir string
+	var sortBy string
+	var reverse bool
 
 	cmd := &cobra.Command{
 		Use:   "reports <project>[/<repository>]",
@@ -223,6 +226,7 @@ func newScannerReportsCmd() *cobra.Command {
 				Repository string      `json:"repository"`
 				Reference  string      `json:"reference"`
 				Report     interface{} `json:"report"`
+				Count      int         `json:"count,omitempty"`
 			}
 			var reports []entry
 
@@ -250,7 +254,11 @@ func newScannerReportsCmd() *cobra.Command {
 							}
 							output.Success("Saved report to %s", path)
 						} else {
-							reports = append(reports, entry{Repository: r, Reference: ref, Report: a.ScanOverview})
+							c := 0
+							for _, ov := range a.ScanOverview {
+								c += ov.Summary.Total
+							}
+							reports = append(reports, entry{Repository: r, Reference: ref, Report: a.ScanOverview, Count: c})
 						}
 						continue
 					}
@@ -293,7 +301,11 @@ func newScannerReportsCmd() *cobra.Command {
 							}
 							output.Success("Saved report to %s", path)
 						} else {
-							reports = append(reports, entry{Repository: r, Reference: ref, Report: report})
+							count := len(report.Vulnerabilities)
+							if count == 0 && report.Summary.Total > 0 {
+								count = report.Summary.Total
+							}
+							reports = append(reports, entry{Repository: r, Reference: ref, Report: report, Count: count})
 						}
 					}
 				}
@@ -307,6 +319,26 @@ func newScannerReportsCmd() *cobra.Command {
 				output.Info("No reports found")
 				return nil
 			}
+
+			sort.SliceStable(reports, func(i, j int) bool {
+				switch strings.ToLower(sortBy) {
+				case "repo", "repository":
+					if reverse {
+						return reports[i].Repository > reports[j].Repository
+					}
+					return reports[i].Repository < reports[j].Repository
+				case "ref", "reference":
+					if reverse {
+						return reports[i].Reference > reports[j].Reference
+					}
+					return reports[i].Reference < reports[j].Reference
+				default:
+					if reverse {
+						return reports[i].Count < reports[j].Count
+					}
+					return reports[i].Count > reports[j].Count
+				}
+			})
 
 			switch output.GetFormat() {
 			case "json":
@@ -372,6 +404,8 @@ func newScannerReportsCmd() *cobra.Command {
 	cmd.Flags().StringVar(&reportType, "type", "vulnerability", "Report type (vulnerability|sbom)")
 	cmd.Flags().BoolVar(&summary, "summary", false, "Show summary instead of full report")
 	cmd.Flags().StringVar(&outputDir, "output-dir", "", "Directory to save reports")
+	cmd.Flags().StringVar(&sortBy, "sort", "vuln", "Sort by field (vuln|repo|ref)")
+	cmd.Flags().BoolVar(&reverse, "reverse", false, "Reverse sort order")
 
 	return cmd
 }
