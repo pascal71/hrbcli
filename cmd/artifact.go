@@ -19,6 +19,7 @@ func NewArtifactCmd() *cobra.Command {
 		Long:  `Manage artifacts in Harbor.`,
 	}
 
+	cmd.AddCommand(newArtifactListCmd())
 	cmd.AddCommand(newArtifactGetCmd())
 	cmd.AddCommand(newArtifactScanCmd())
 	cmd.AddCommand(newArtifactVulnCmd())
@@ -85,6 +86,139 @@ func parseArtifactRef(input string) (string, string, string, error) {
 	}
 
 	return project, repo, ref, nil
+}
+
+func parseProjectRepo(input string) (string, string, error) {
+	parts := strings.SplitN(input, "/", 2)
+	if len(parts) == 0 || parts[0] == "" {
+		return "", "", fmt.Errorf("invalid reference format")
+	}
+	project := parts[0]
+	repo := ""
+	if len(parts) == 2 {
+		repo = parts[1]
+		if repo == "" {
+			return "", "", fmt.Errorf("invalid repository reference")
+		}
+	}
+	return project, repo, nil
+}
+
+func newArtifactListCmd() *cobra.Command {
+	var (
+		page             int
+		pageSize         int
+		withLabel        bool
+		withScanOverview bool
+		detail           bool
+	)
+
+	cmd := &cobra.Command{
+		Use:   "list <project>[/<repository>]",
+		Short: "List artifacts",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			project, repo, err := parseProjectRepo(args[0])
+			if err != nil {
+				return err
+			}
+
+			client, err := api.NewClient()
+			if err != nil {
+				return err
+			}
+
+			artSvc := harbor.NewArtifactService(client)
+
+			opts := &api.ArtifactListOptions{
+				Page:             page,
+				PageSize:         pageSize,
+				WithTag:          true,
+				WithLabel:        withLabel,
+				WithSignature:    true,
+				WithScanOverview: withScanOverview,
+			}
+
+			printArtifacts := func(repoName string, arts []*api.Artifact) error {
+				if len(arts) == 0 {
+					return nil
+				}
+
+				switch output.GetFormat() {
+				case "json":
+					return output.JSON(arts)
+				case "yaml":
+					return output.YAML(arts)
+				default:
+					table := output.Table()
+					headers := []string{"REPOSITORY", "DIGEST", "TAGS"}
+					if detail {
+						headers = append(headers, "SIZE", "ARCH", "SIGNED")
+					}
+					table.Append(headers)
+					for _, a := range arts {
+						tags := make([]string, len(a.Tags))
+						for i, t := range a.Tags {
+							tags[i] = t.Name
+						}
+						row := []string{repoName, output.Truncate(a.Digest, 13), strings.Join(tags, ",")}
+						if detail {
+							arch := ""
+							if a.ExtraAttrs != nil {
+								arch = a.ExtraAttrs.Architecture
+							}
+							signed := "no"
+							if len(a.Signatures) > 0 {
+								signed = "yes"
+							}
+							row = append(row,
+								harbor.FormatStorageSize(a.Size),
+								arch,
+								signed,
+							)
+						}
+						table.Append(row)
+					}
+					table.Render()
+					return nil
+				}
+			}
+
+			if repo != "" {
+				arts, err := artSvc.List(project, repo, opts)
+				if err != nil {
+					return fmt.Errorf("failed to list artifacts: %w", err)
+				}
+				return printArtifacts(repo, arts)
+			}
+
+			repoSvc := harbor.NewRepositoryService(client)
+			repos, err := repoSvc.List(project, nil)
+			if err != nil {
+				return fmt.Errorf("failed to list repositories: %w", err)
+			}
+
+			for _, r := range repos {
+				repoName := strings.TrimPrefix(r.Name, project+"/")
+				arts, err := artSvc.List(project, repoName, opts)
+				if err != nil {
+					return fmt.Errorf("failed to list artifacts for %s: %w", r.Name, err)
+				}
+				if err := printArtifacts(r.Name, arts); err != nil {
+					return err
+				}
+			}
+
+			return nil
+		},
+	}
+
+	cmd.Flags().IntVar(&page, "page", 1, "Page number")
+	cmd.Flags().IntVar(&pageSize, "page-size", 20, "Page size")
+	cmd.Flags().BoolVar(&withLabel, "with-label", false, "Include labels")
+	cmd.Flags().BoolVar(&withScanOverview, "with-scan-overview", false, "Include scan overview")
+	cmd.Flags().BoolVar(&detail, "detail", false, "Show detailed information")
+	return cmd
 }
 
 func newArtifactVulnCmd() *cobra.Command {

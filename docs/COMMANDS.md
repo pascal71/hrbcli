@@ -142,17 +142,20 @@ hrbcli repo tags myproject/myapp --filter "v1.*"
 
 #### `hrbcli artifact list`
 
-List artifacts in a repository.
+List artifacts in a repository or across a project.
 
 ```bash
-# List all artifacts
+# List all artifacts in a repository
 hrbcli artifact list myproject/myapp
 
-# List with vulnerabilities
+# List all artifacts in a project
+hrbcli artifact list myproject
+
+# Include vulnerability summary
 hrbcli artifact list myproject/myapp --with-scan-overview
 
-# List with labels
-hrbcli artifact list myproject/myapp --with-label
+# Include labels and extra details
+hrbcli artifact list myproject/myapp --with-label --detail
 ```
 
 #### `hrbcli artifact get`
@@ -507,6 +510,9 @@ done
 
 # Check scan results
 hrbcli artifact list myproject/webapp --with-scan-overview
+
+# List all artifacts in the project with details
+hrbcli artifact list myproject --detail
 
 # Export vulnerability report
 hrbcli artifact vulnerabilities myproject/webapp:latest -o json > vulns.json

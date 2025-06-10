@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/pascal71/hrbcli/pkg/api"
 )
@@ -16,6 +17,47 @@ type ArtifactService struct {
 // NewArtifactService creates a new artifact service
 func NewArtifactService(client *api.Client) *ArtifactService {
 	return &ArtifactService{client: client}
+}
+
+// List lists artifacts in a repository
+func (s *ArtifactService) List(project, repository string, opts *api.ArtifactListOptions) ([]*api.Artifact, error) {
+	projectEsc := url.PathEscape(project)
+	repoEsc := url.PathEscape(repository)
+	path := fmt.Sprintf("/projects/%s/repositories/%s/artifacts", projectEsc, repoEsc)
+
+	params := make(map[string]string)
+	if opts != nil {
+		if opts.Page > 0 {
+			params["page"] = strconv.Itoa(opts.Page)
+		}
+		if opts.PageSize > 0 {
+			params["page_size"] = strconv.Itoa(opts.PageSize)
+		}
+		if opts.WithTag {
+			params["with_tag"] = "true"
+		}
+		if opts.WithLabel {
+			params["with_label"] = "true"
+		}
+		if opts.WithSignature {
+			params["with_signature"] = "true"
+		}
+		if opts.WithScanOverview {
+			params["with_scan_overview"] = "true"
+		}
+	}
+
+	resp, err := s.client.Get(path, params)
+	if err != nil {
+		return nil, err
+	}
+
+	var artifacts []*api.Artifact
+	if err := s.client.DecodeResponse(resp, &artifacts); err != nil {
+		return nil, fmt.Errorf("failed to decode artifacts: %w", err)
+	}
+
+	return artifacts, nil
 }
 
 // Get retrieves details of a specific artifact
