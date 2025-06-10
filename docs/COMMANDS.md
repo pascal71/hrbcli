@@ -339,6 +339,26 @@ hrbcli system health --component core
 hrbcli system health --component jobservice
 ```
 
+#### `hrbcli system config get`
+
+Get Harbor system configuration.
+
+```bash
+# Show all configuration
+hrbcli system config get
+
+# Show specific value
+hrbcli system config get auth_mode
+```
+
+#### `hrbcli system config set`
+
+Update Harbor system configuration.
+
+```bash
+hrbcli system config set read_only true
+```
+
 #### `hrbcli system gc`
 
 Manage garbage collection.

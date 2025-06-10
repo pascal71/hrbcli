@@ -20,6 +20,7 @@ func NewSystemCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(newSystemStatisticsCmd())
+	cmd.AddCommand(newSystemConfigCmd())
 
 	return cmd
 }
@@ -75,4 +76,81 @@ func newSystemStatisticsCmd() *cobra.Command {
 	}
 
 	return cmd
+}
+
+func newSystemConfigCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "config",
+		Short: "Manage Harbor system configuration",
+	}
+	cmd.AddCommand(newSystemConfigGetCmd())
+	cmd.AddCommand(newSystemConfigSetCmd())
+	return cmd
+}
+
+func newSystemConfigGetCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "get [key]",
+		Short: "Get Harbor system configuration",
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			client, err := api.NewClient()
+			if err != nil {
+				return err
+			}
+			svc := harbor.NewConfigService(client)
+			cfg, err := svc.Get()
+			if err != nil {
+				return fmt.Errorf("failed to get configuration: %w", err)
+			}
+			if len(args) == 1 {
+				val, ok := cfg[args[0]]
+				if !ok {
+					return fmt.Errorf("configuration key '%s' not found", args[0])
+				}
+				fmt.Printf("%s: %v\n", args[0], val)
+				return nil
+			}
+			switch output.GetFormat() {
+			case "json":
+				return output.JSON(cfg)
+			default:
+				return output.YAML(cfg)
+			}
+		},
+	}
+}
+
+func parseConfigValue(val string) interface{} {
+	if i, err := strconv.Atoi(val); err == nil {
+		return i
+	}
+	if val == "true" {
+		return true
+	}
+	if val == "false" {
+		return false
+	}
+	return val
+}
+
+func newSystemConfigSetCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "set <key> <value>",
+		Short: "Set Harbor system configuration",
+		Args:  requireArgs(2, "requires <key> and <value>"),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			client, err := api.NewClient()
+			if err != nil {
+				return err
+			}
+			svc := harbor.NewConfigService(client)
+			cfg := map[string]interface{}{args[0]: parseConfigValue(args[1])}
+			if err := svc.Update(cfg); err != nil {
+				return fmt.Errorf("failed to update configuration: %w", err)
+			}
+			output.Success("Updated %s", args[0])
+			return nil
+		},
+	}
 }
