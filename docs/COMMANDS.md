@@ -474,6 +474,16 @@ Show details of a distribution policy.
 hrbcli distribution policy myproject mypolicy
 ```
 
+### Job Service
+
+#### `hrbcli jobservice dashboard`
+
+Display job service worker pools, workers and job queues.
+
+```bash
+hrbcli jobservice dashboard
+```
+
 ### Configuration
 
 #### `hrbcli config init`

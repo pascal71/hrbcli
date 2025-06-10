@@ -83,6 +83,9 @@ hrbcli system info
 # Show Harbor statistics
 hrbcli system statistics
 
+# Show job service dashboard
+hrbcli jobservice dashboard
+
 ```
 
 ### Scanner Commands
