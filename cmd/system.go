@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -81,23 +82,28 @@ func newSystemStatisticsCmd() *cobra.Command {
 func newSystemConfigCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config",
+
 		Short: "Manage Harbor system configuration",
 	}
 	cmd.AddCommand(newSystemConfigGetCmd())
 	cmd.AddCommand(newSystemConfigSetCmd())
+
 	return cmd
 }
 
 func newSystemConfigGetCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "get [key]",
+
 		Short: "Get Harbor system configuration",
+
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := api.NewClient()
 			if err != nil {
 				return err
 			}
+
 			svc := harbor.NewConfigService(client)
 			cfg, err := svc.Get()
 			if err != nil {
@@ -140,16 +146,19 @@ func newSystemConfigSetCmd() *cobra.Command {
 		Short: "Set Harbor system configuration",
 		Args:  requireArgs(2, "requires <key> and <value>"),
 		RunE: func(cmd *cobra.Command, args []string) error {
+
 			client, err := api.NewClient()
 			if err != nil {
 				return err
 			}
+
 			svc := harbor.NewConfigService(client)
 			cfg := map[string]interface{}{args[0]: parseConfigValue(args[1])}
 			if err := svc.Update(cfg); err != nil {
 				return fmt.Errorf("failed to update configuration: %w", err)
 			}
 			output.Success("Updated %s", args[0])
+
 			return nil
 		},
 	}

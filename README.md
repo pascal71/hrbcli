@@ -15,6 +15,7 @@ A powerful command-line interface for [Harbor](https://goharbor.io/) container r
 - 📚 **Comprehensive Documentation** - Built-in help for all commands
 - 🔄 **Shell Completions** - Bash, Zsh, and Fish shell completions
 - 🚚 **Distribution Management** - Manage preheat providers and policies
+- 🛠 **System Configuration** - View and update Harbor system settings
 
 ## Installation
 
@@ -82,6 +83,9 @@ hrbcli system info
 
 # Show Harbor statistics
 hrbcli system statistics
+
+# View Harbor configuration
+hrbcli system config get
 
 ```
 
