@@ -253,6 +253,24 @@ hrbcli scanner reports myproject --summary
 hrbcli scanner reports myproject/myrepo --type sbom
 ```
 
+### Label Management
+
+#### `hrbcli label list`
+
+List labels.
+
+```bash
+hrbcli label list
+```
+
+#### `hrbcli label create`
+
+Create a new label.
+
+```bash
+hrbcli label create mylabel --scope g
+```
+
 ### User Management
 
 #### `hrbcli user list`
