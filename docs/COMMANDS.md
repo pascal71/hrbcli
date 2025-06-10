@@ -96,6 +96,18 @@ hrbcli repo list myproject --detail
 hrbcli repo list myproject --filter "app*"
 ```
 
+#### `hrbcli repo get`
+
+Show details for a repository.
+
+```bash
+# Get repository information
+hrbcli repo get myproject/myapp
+
+# Include creation/update timestamps
+hrbcli repo get myproject/myapp --detail
+```
+
 #### `hrbcli repo delete`
 
 Delete a repository.
@@ -153,6 +165,26 @@ hrbcli artifact scan myproject/myapp@sha256:abc123
 
 # Scan all artifacts in repository
 hrbcli artifact scan myproject/myapp --all
+```
+
+#### `hrbcli artifact vulnerabilities`
+
+Show vulnerability report for an artifact. Use `--severity` to fail if vulnerabilities of that level or higher exist.
+
+```bash
+# Show vulnerabilities
+hrbcli artifact vulnerabilities myproject/myapp:latest
+
+# Fail if high or critical vulns found
+hrbcli artifact vulnerabilities myproject/myapp:latest --severity high
+```
+
+#### `hrbcli artifact sbom`
+
+Display the SBOM report for an artifact.
+
+```bash
+hrbcli artifact sbom myproject/myapp:latest -o json
 ```
 
 #### `hrbcli artifact copy`
@@ -228,6 +260,18 @@ hrbcli system info --with-storage
 hrbcli system info -o yaml
 ```
 
+#### `hrbcli system statistics`
+
+Show general Harbor statistics.
+
+```bash
+# Display statistics
+hrbcli system statistics
+
+# Output as JSON
+hrbcli system statistics -o json
+```
+
 #### `hrbcli system health`
 
 Check system health.
@@ -254,6 +298,18 @@ hrbcli system gc history
 
 # Get GC job details
 hrbcli system gc status <job-id>
+```
+
+#### `hrbcli system backup`
+
+Create a backup of Harbor data and configuration. Docker must be available on the host running the command.
+
+```bash
+# Backup Harbor using default settings
+hrbcli system backup
+
+# Store the backup under /backups
+hrbcli system backup --dir /backups
 ```
 
 ### Replication
@@ -286,6 +342,54 @@ hrbcli replication create prod-pull \
   --source https://harbor2.example.com/myproject \
   --destination myproject \
   --direction pull
+```
+
+#### `hrbcli replication get`
+
+Show details of a replication policy.
+
+```bash
+hrbcli replication get 1
+```
+
+#### `hrbcli replication delete`
+
+Delete a replication policy.
+
+```bash
+hrbcli replication delete 1
+```
+
+#### `hrbcli replication executions`
+
+List executions of a policy.
+
+```bash
+hrbcli replication executions 1
+```
+
+#### `hrbcli replication execution`
+
+Show execution statistics.
+
+```bash
+hrbcli replication execution 10
+```
+
+#### `hrbcli replication logs`
+
+Show logs for an execution.
+
+```bash
+hrbcli replication logs 10
+```
+
+#### `hrbcli replication statistics`
+
+Aggregate statistics across executions.
+
+```bash
+hrbcli replication statistics
 ```
 
 #### `hrbcli replication execute`

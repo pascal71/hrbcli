@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -21,6 +22,7 @@ func NewRepositoryCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(newRepoListCmd())
+	cmd.AddCommand(newRepoGetCmd())
 
 	return cmd
 }
@@ -115,5 +117,73 @@ func newRepoListCmd() *cobra.Command {
 	cmd.Flags().StringVar(&sortBy, "sort", "", "Sort by field")
 	cmd.Flags().BoolVar(&detail, "detail", false, "Show detailed information")
 
+	return cmd
+}
+
+func parseRepoRef(input string) (string, string, error) {
+	parts := strings.SplitN(input, "/", 2)
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("invalid repository reference")
+	}
+	project := parts[0]
+	repo := parts[1]
+	if project == "" || repo == "" {
+		return "", "", fmt.Errorf("invalid repository reference")
+	}
+	return project, repo, nil
+}
+
+func newRepoGetCmd() *cobra.Command {
+	var detail bool
+
+	cmd := &cobra.Command{
+		Use:   "get <project>/<repository>",
+		Short: "Get repository details",
+		Long:  `Get detailed information about a repository.`,
+		Args:  cobra.ExactArgs(1),
+		Example: `  # Get repository details
+  hrbcli repo get myproject/myrepo
+
+  # Show timestamps
+  hrbcli repo get myproject/myrepo --detail`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			project, repo, err := parseRepoRef(args[0])
+			if err != nil {
+				return err
+			}
+
+			client, err := api.NewClient()
+			if err != nil {
+				return err
+			}
+
+			repoSvc := harbor.NewRepositoryService(client)
+
+			repository, err := repoSvc.Get(project, repo)
+			if err != nil {
+				return fmt.Errorf("failed to get repository: %w", err)
+			}
+
+			switch output.GetFormat() {
+			case "json":
+				return output.JSON(repository)
+			case "yaml":
+				return output.YAML(repository)
+			default:
+				output.Info("Repository: %s", output.Bold(repository.Name))
+				output.Info("")
+				fmt.Printf("Artifacts:  %d\n", repository.ArtifactCount)
+				fmt.Printf("Pulls:      %d\n", repository.PullCount)
+				if detail {
+					fmt.Printf("Created:    %s\n", repository.CreationTime.Format("2006-01-02 15:04:05"))
+					fmt.Printf("Updated:    %s\n", repository.UpdateTime.Format("2006-01-02 15:04:05"))
+				}
+			}
+
+			return nil
+		},
+	}
+
+	cmd.Flags().BoolVar(&detail, "detail", false, "Show creation and update times")
 	return cmd
 }

@@ -142,9 +142,11 @@ func (s *RegistryService) Ping(req *api.RegistryReq) error {
 // Harbor 2.6+ exposes adapter details via `/replication/adapterinfos`.
 func (s *RegistryService) GetInfo(registryType string) (*api.RegistryInfo, error) {
 	resp, err := s.client.Get("/replication/adapterinfos", nil)
+
 	if err != nil {
 		return nil, err
 	}
+
 
 	infos := make(map[string]*api.RegistryInfo)
 	if err := s.client.DecodeResponse(resp, &infos); err != nil {
@@ -161,6 +163,18 @@ func (s *RegistryService) GetInfo(registryType string) (*api.RegistryInfo, error
 
 // ListAdapters lists all registry adapter information.
 // Harbor 2.6+ returns the details at `/replication/adapterinfos`.
+
+	var info api.RegistryInfo
+	if err := s.client.DecodeResponse(resp, &info); err != nil {
+		return nil, fmt.Errorf("failed to decode registry info: %w", err)
+	}
+
+	return &info, nil
+}
+
+// Use `/replication/adapterinfos` to get adapter details in newer Harbor versions.
+// ListAdapters lists available registry adapters
+
 func (s *RegistryService) ListAdapters() (map[string]*api.RegistryInfo, error) {
 	resp, err := s.client.Get("/replication/adapterinfos", nil)
 	if err != nil {

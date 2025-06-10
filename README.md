@@ -67,6 +67,9 @@ hrbcli project create myproject --public
 # List repositories in a project
 hrbcli repo list myproject
 
+# Get repository details
+hrbcli repo get myproject/myapp
+
 # List tags for a repository
 hrbcli repo tags myproject/myapp
 
@@ -75,6 +78,14 @@ hrbcli repo delete myproject/myapp:v1.0.0
 
 # Get system information
 hrbcli system info
+
+
+# Backup Harbor
+hrbcli system backup --dir /backups
+
+# Show Harbor statistics
+hrbcli system statistics
+
 ```
 
 ## Configuration
