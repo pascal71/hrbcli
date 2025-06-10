@@ -3,7 +3,16 @@ package api
 // VulnerabilityReport represents a vulnerability scanning report
 // Only fields needed by the CLI are included.
 type VulnerabilityReport struct {
-	Vulnerabilities []VulnerabilityItem `json:"vulnerabilities"`
+	Severity        string               `json:"severity"`
+	Summary         VulnerabilitySummary `json:"summary"`
+	Vulnerabilities []VulnerabilityItem  `json:"vulnerabilities"`
+}
+
+// VulnerabilitySummary contains summary information about the
+// vulnerabilities found in a scan.
+type VulnerabilitySummary struct {
+	Total   int `json:"total"`
+	Fixable int `json:"fixable"`
 }
 
 // VulnerabilityItem represents a single vulnerability entry
