@@ -1,4 +1,4 @@
-# Harbor CLI Makefile
+				# Harbor CLI Makefile
 
 # Variables
 BINARY_NAME := hrbcli
@@ -54,6 +54,8 @@ integration-test:
 # Run linter
 .PHONY: lint
 lint:
+	@echo "Running gofmt..."
+	@gofmt -w $(shell git ls-files '*.go')
 	@echo "Running linter..."
 	golangci-lint run ./...
 
