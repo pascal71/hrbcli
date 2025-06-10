@@ -3,7 +3,9 @@ package harbor
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/pascal71/hrbcli/pkg/api"
 )
@@ -109,8 +111,22 @@ func (s *UserService) Create(req *api.UserReq) (*api.User, error) {
 	if location == "" {
 		return nil, nil
 	}
-	var id int64
-	fmt.Sscanf(location, "/api/%*s/users/%d", &id)
+
+	u, err := url.Parse(location)
+	if err != nil {
+		return nil, fmt.Errorf("invalid location header: %s", location)
+	}
+
+	parts := strings.Split(strings.Trim(u.Path, "/"), "/")
+	if len(parts) == 0 {
+		return nil, fmt.Errorf("invalid location header: %s", location)
+	}
+	idStr := parts[len(parts)-1]
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid user ID in location: %s", location)
+	}
+
 	return s.Get(id)
 }
 
