@@ -106,13 +106,13 @@ func newRegistryListCmd() *cobra.Command {
 
 func newRegistryCreateCmd() *cobra.Command {
 	var (
-		url         string
-		description string
-		regType     string
-		insecure    bool
-		username    string
-		password    string
-		interactive bool
+		url              string
+		description      string
+		regType          string
+		registryInsecure bool
+		username         string
+		password         string
+		interactive      bool
 	)
 
 	cmd := &cobra.Command{
@@ -194,7 +194,7 @@ func newRegistryCreateCmd() *cobra.Command {
 				if err != nil {
 					return err
 				}
-				insecure = insVal == "true"
+				registryInsecure = insVal == "true"
 
 				userPrompt := promptui.Prompt{Label: "Username", AllowEdit: true}
 				username, _ = userPrompt.Run()
@@ -231,7 +231,7 @@ func newRegistryCreateCmd() *cobra.Command {
 				URL:         url,
 				Description: description,
 				Type:        regType,
-				Insecure:    insecure,
+				Insecure:    registryInsecure,
 			}
 
 			// Add credentials if provided
@@ -254,6 +254,9 @@ func newRegistryCreateCmd() *cobra.Command {
 			// Create registry
 			registry, err := registrySvc.Create(req)
 			if err != nil {
+				if apiErr, ok := err.(*api.APIError); ok && apiErr.IsConflict() {
+					return fmt.Errorf("registry '%s' already exists", name)
+				}
 				return fmt.Errorf("failed to create registry: %w", err)
 			}
 
@@ -270,7 +273,7 @@ func newRegistryCreateCmd() *cobra.Command {
 	cmd.Flags().StringVar(&url, "url", "", "Registry URL")
 	cmd.Flags().StringVar(&description, "description", "", "Registry description")
 	cmd.Flags().StringVar(&regType, "type", api.RegistryTypeDockerRegistry, "Registry type")
-	cmd.Flags().BoolVar(&insecure, "insecure", false, "Skip TLS verification")
+	cmd.Flags().BoolVar(&registryInsecure, "registry-insecure", false, "Skip registry TLS verification")
 	cmd.Flags().StringVar(&username, "username", "", "Registry username")
 	cmd.Flags().StringVar(&password, "password", "", "Registry password")
 	cmd.Flags().BoolVarP(&interactive, "interactive", "i", false, "Interactive mode")
@@ -337,11 +340,11 @@ func newRegistryGetCmd() *cobra.Command {
 
 func newRegistryUpdateCmd() *cobra.Command {
 	var (
-		url         string
-		description string
-		insecureVal *bool
-		username    string
-		password    string
+		url                 string
+		description         string
+		registryInsecureVal *bool
+		username            string
+		password            string
 	)
 
 	cmd := &cobra.Command{
@@ -382,8 +385,8 @@ func newRegistryUpdateCmd() *cobra.Command {
 			if description != "" {
 				req.Description = description
 			}
-			if insecureVal != nil {
-				req.Insecure = *insecureVal
+			if registryInsecureVal != nil {
+				req.Insecure = *registryInsecureVal
 			}
 			if username != "" || password != "" {
 				req.Credential = &api.Credential{
@@ -404,14 +407,14 @@ func newRegistryUpdateCmd() *cobra.Command {
 
 	cmd.Flags().StringVar(&url, "url", "", "Registry URL")
 	cmd.Flags().StringVar(&description, "description", "", "Registry description")
-	cmd.Flags().BoolVar(&dummyBool, "insecure", false, "Skip TLS verification")
+	cmd.Flags().BoolVar(&dummyBool, "registry-insecure", false, "Skip registry TLS verification")
 	cmd.Flags().StringVar(&username, "username", "", "Registry username")
 	cmd.Flags().StringVar(&password, "password", "", "Registry password")
 
 	cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
-		if cmd.Flags().Changed("insecure") {
-			val, _ := cmd.Flags().GetBool("insecure")
-			insecureVal = &val
+		if cmd.Flags().Changed("registry-insecure") {
+			val, _ := cmd.Flags().GetBool("registry-insecure")
+			registryInsecureVal = &val
 		}
 		return nil
 	}
@@ -476,11 +479,11 @@ func newRegistryDeleteCmd() *cobra.Command {
 
 func newRegistryPingCmd() *cobra.Command {
 	var (
-		url      string
-		regType  string
-		insecure bool
-		username string
-		password string
+		url              string
+		regType          string
+		registryInsecure bool
+		username         string
+		password         string
 	)
 
 	cmd := &cobra.Command{
@@ -509,7 +512,7 @@ func newRegistryPingCmd() *cobra.Command {
 				Name:     "ping-test",
 				URL:      url,
 				Type:     regType,
-				Insecure: insecure,
+				Insecure: registryInsecure,
 			}
 
 			// Add credentials if provided
@@ -535,7 +538,7 @@ func newRegistryPingCmd() *cobra.Command {
 
 	cmd.Flags().StringVar(&url, "url", "", "Registry URL (required)")
 	cmd.Flags().StringVar(&regType, "type", api.RegistryTypeDockerRegistry, "Registry type")
-	cmd.Flags().BoolVar(&insecure, "insecure", false, "Skip TLS verification")
+	cmd.Flags().BoolVar(&registryInsecure, "registry-insecure", false, "Skip registry TLS verification")
 	cmd.Flags().StringVar(&username, "username", "", "Registry username")
 	cmd.Flags().StringVar(&password, "password", "", "Registry password")
 
