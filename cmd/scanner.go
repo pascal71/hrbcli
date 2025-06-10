@@ -287,7 +287,13 @@ func newScannerReportsCmd() *cobra.Command {
 							table.Append([]string{e.Repository, e.Reference, ""})
 							continue
 						}
-						table.Append([]string{e.Repository, e.Reference, fmt.Sprintf("%d", len(rep.Vulnerabilities))})
+
+						count := len(rep.Vulnerabilities)
+						if count == 0 && rep.Summary.Total > 0 {
+							count = rep.Summary.Total
+						}
+						table.Append([]string{e.Repository, e.Reference, fmt.Sprintf("%d", count)})
+
 					}
 				}
 				table.Render()
