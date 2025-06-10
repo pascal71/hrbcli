@@ -177,6 +177,9 @@ hrbcli artifact scan myproject/myapp@sha256:abc123
 
 # Scan all artifacts in repository
 hrbcli artifact scan myproject/myapp --all
+
+# Wait for scan to finish
+hrbcli artifact scan myproject/myapp:latest --wait
 ```
 
 #### `hrbcli artifact vulnerabilities`

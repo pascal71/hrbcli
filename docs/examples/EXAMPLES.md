@@ -127,6 +127,8 @@ $ hrbcli artifact scan my-app/frontend --all
 $ hrbcli artifact scan my-app/frontend:latest --wait
 ```
 
+Using `--wait` will poll Harbor until the scan status is reported as finished.
+
 ### View Vulnerabilities
 
 ```bash
