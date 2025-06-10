@@ -318,7 +318,23 @@ func newScannerReportsCmd() *cobra.Command {
 							if count == 0 && report.Summary.Total > 0 {
 								count = report.Summary.Total
 							}
-							reports = append(reports, entry{Repository: r, Reference: ref, Report: report, Count: count})
+
+							crit := report.Summary.Summary["Critical"]
+							high := report.Summary.Summary["High"]
+							med := report.Summary.Summary["Medium"]
+							low := report.Summary.Summary["Low"]
+
+							reports = append(reports, entry{
+								Repository: r,
+								Reference:  ref,
+								Report:     report,
+								Count:      count,
+								Critical:   crit,
+								High:       high,
+								Medium:     med,
+								Low:        low,
+								Total:      report.Summary.Total,
+							})
 						}
 					}
 				}
