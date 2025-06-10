@@ -450,6 +450,30 @@ hrbcli replication execute --policy-name prod-sync
 hrbcli replication execute prod-sync --dry-run
 ```
 
+#### `hrbcli distribution providers <project>`
+
+List distribution providers configured for a project.
+
+```bash
+hrbcli distribution providers myproject
+```
+
+#### `hrbcli distribution policies <project>`
+
+List distribution policies defined in a project.
+
+```bash
+hrbcli distribution policies myproject
+```
+
+#### `hrbcli distribution policy <project> <name>`
+
+Show details of a distribution policy.
+
+```bash
+hrbcli distribution policy myproject mypolicy
+```
+
 ### Configuration
 
 #### `hrbcli config init`
