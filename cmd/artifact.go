@@ -29,7 +29,10 @@ func NewArtifactCmd() *cobra.Command {
 }
 
 func newArtifactScanCmd() *cobra.Command {
-	var scanType string
+	var (
+		scanType string
+		all      bool
+	)
 
 	cmd := &cobra.Command{
 		Use:   "scan <project>/<repository>[:tag|@digest]",
@@ -37,17 +40,41 @@ func newArtifactScanCmd() *cobra.Command {
 		Long:  `Trigger vulnerability scan for a specific image in Harbor.`,
 		Args:  requireArgs(1, "requires <project>/<repository>[:tag|@digest]"),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			project, repo, ref, err := parseArtifactRef(args[0])
-			if err != nil {
-				return err
-			}
-
 			client, err := api.NewClient()
 			if err != nil {
 				return err
 			}
 
 			artSvc := harbor.NewArtifactService(client)
+
+			if all {
+				project, repo, err := parseProjectRepo(args[0])
+				if err != nil {
+					return err
+				}
+				if repo == "" {
+					return fmt.Errorf("repository is required when using --all")
+				}
+
+				arts, err := artSvc.List(project, repo, nil)
+				if err != nil {
+					return fmt.Errorf("failed to list artifacts: %w", err)
+				}
+				for _, a := range arts {
+					if err := artSvc.Scan(project, repo, a.Digest, scanType); err != nil {
+						output.Warning("Failed to scan %s/%s@%s: %v", project, repo, output.Truncate(a.Digest, 13), err)
+					} else {
+						output.Success("Scan triggered for %s/%s@%s", project, repo, output.Truncate(a.Digest, 13))
+					}
+				}
+				return nil
+			}
+
+			project, repo, ref, err := parseArtifactRef(args[0])
+			if err != nil {
+				return err
+			}
+
 			if err := artSvc.Scan(project, repo, ref, scanType); err != nil {
 				return fmt.Errorf("failed to scan artifact: %w", err)
 			}
@@ -58,6 +85,7 @@ func newArtifactScanCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&scanType, "scan-type", "", "Scan type (vulnerability|sbom)")
+	cmd.Flags().BoolVar(&all, "all", false, "Scan all artifacts in the repository")
 
 	return cmd
 }
