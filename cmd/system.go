@@ -20,6 +20,8 @@ func NewSystemCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(newSystemStatisticsCmd())
+	cmd.AddCommand(newSystemInfoCmd())
+	cmd.AddCommand(newSystemHealthCmd())
 	cmd.AddCommand(newSystemConfigCmd())
 
 	return cmd
@@ -76,6 +78,61 @@ func newSystemStatisticsCmd() *cobra.Command {
 	}
 
 	return cmd
+}
+
+func newSystemInfoCmd() *cobra.Command {
+	var withStorage bool
+	cmd := &cobra.Command{
+		Use:   "info",
+		Short: "Show system information",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			client, err := api.NewClient()
+			if err != nil {
+				return err
+			}
+
+			svc := harbor.NewSystemService(client)
+			info, err := svc.GetInfo(withStorage)
+			if err != nil {
+				return fmt.Errorf("failed to get system info: %w", err)
+			}
+
+			switch output.GetFormat() {
+			case "json":
+				return output.JSON(info)
+			case "yaml":
+				return output.YAML(info)
+			default:
+				table := output.Table()
+				table.Append([]string{"FIELD", "VALUE"})
+				table.Append([]string{"Harbor Version", info.HarborVersion})
+				table.Append([]string{"Registry", info.RegistryURL})
+				table.Render()
+				return nil
+			}
+		},
+	}
+	cmd.Flags().BoolVar(&withStorage, "with-storage", false, "Include storage information")
+	return cmd
+}
+
+func newSystemHealthCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "health",
+		Short: "Check system health",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			client, err := api.NewClient()
+			if err != nil {
+				return err
+			}
+
+			if err := client.CheckHealth(); err != nil {
+				return err
+			}
+			output.Success("Harbor is healthy")
+			return nil
+		},
+	}
 }
 
 func newSystemConfigCmd() *cobra.Command {
