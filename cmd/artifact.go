@@ -157,6 +157,11 @@ func newArtifactListCmd() *cobra.Command {
 					}
 					table.Append(headers)
 					for _, a := range arts {
+						if detail && (a.ExtraAttrs == nil || a.ExtraAttrs.Architecture == "") {
+							if art, err := artSvc.Get(project, repoName, a.Digest); err == nil && art.ExtraAttrs != nil {
+								a.ExtraAttrs = art.ExtraAttrs
+							}
+						}
 						tags := make([]string, len(a.Tags))
 						for i, t := range a.Tags {
 							tags[i] = t.Name
