@@ -33,6 +33,7 @@ func newArtifactScanCmd() *cobra.Command {
 	var (
 		scanType string
 		wait     bool
+		all      bool
 	)
 
 	cmd := &cobra.Command{
@@ -121,6 +122,7 @@ func newArtifactScanCmd() *cobra.Command {
 	cmd.Flags().StringVar(&scanType, "scan-type", "", "Scan type (vulnerability|sbom)")
 
 	cmd.Flags().BoolVar(&wait, "wait", false, "Wait for scan to complete")
+	cmd.Flags().BoolVar(&all, "all", false, "Scan all artifacts in the repository")
 
 	return cmd
 }
