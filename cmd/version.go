@@ -3,9 +3,9 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
 	"github.com/pascal71/hrbcli/internal/version"
 	"github.com/pascal71/hrbcli/pkg/output"
+	"github.com/spf13/cobra"
 )
 
 // NewVersionCmd creates the version command
