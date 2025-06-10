@@ -36,7 +36,8 @@ func (s *RepositoryService) List(projectName string, opts *api.ListOptions) ([]*
 		}
 	}
 
-	path := fmt.Sprintf("/projects/%s/repositories", projectName)
+	projectEsc := url.PathEscape(projectName)
+	path := fmt.Sprintf("/projects/%s/repositories", projectEsc)
 	resp, err := s.client.Get(path, params)
 	if err != nil {
 		return nil, err
