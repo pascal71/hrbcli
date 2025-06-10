@@ -19,6 +19,7 @@ func NewArtifactCmd() *cobra.Command {
 		Long:  `Manage artifacts in Harbor.`,
 	}
 
+	cmd.AddCommand(newArtifactGetCmd())
 	cmd.AddCommand(newArtifactScanCmd())
 	cmd.AddCommand(newArtifactVulnCmd())
 	cmd.AddCommand(newArtifactSbomCmd())
@@ -193,5 +194,61 @@ func newArtifactSbomCmd() *cobra.Command {
 		},
 	}
 
+	return cmd
+}
+
+func newArtifactGetCmd() *cobra.Command {
+	var showTags bool
+	cmd := &cobra.Command{
+		Use:   "get <project>/<repository>[:tag|@digest]",
+		Short: "Get artifact details",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			project, repo, ref, err := parseArtifactRef(args[0])
+			if err != nil {
+				return err
+			}
+			client, err := api.NewClient()
+			if err != nil {
+				return err
+			}
+			artSvc := harbor.NewArtifactService(client)
+			artifact, err := artSvc.Get(project, repo, ref)
+			if err != nil {
+				return fmt.Errorf("failed to get artifact: %w", err)
+			}
+			switch output.GetFormat() {
+			case "json":
+				return output.JSON(artifact)
+			case "yaml":
+				return output.YAML(artifact)
+			default:
+				output.Info("Artifact: %s", output.Bold(artifact.Digest))
+				fmt.Printf("Size:         %s\n", harbor.FormatStorageSize(artifact.Size))
+				if artifact.ExtraAttrs != nil {
+					if artifact.ExtraAttrs.Architecture != "" {
+						fmt.Printf("Architecture: %s\n", artifact.ExtraAttrs.Architecture)
+					}
+					if artifact.ExtraAttrs.OS != "" {
+						fmt.Printf("OS:           %s\n", artifact.ExtraAttrs.OS)
+					}
+				}
+				signed := "no"
+				if len(artifact.Signatures) > 0 {
+					signed = "yes"
+				}
+				fmt.Printf("Signed:       %s\n", signed)
+				if showTags && len(artifact.Tags) > 0 {
+					names := make([]string, len(artifact.Tags))
+					for i, t := range artifact.Tags {
+						names[i] = t.Name
+					}
+					fmt.Printf("Tags:         %s\n", strings.Join(names, ", "))
+				}
+				return nil
+			}
+		},
+	}
+	cmd.Flags().BoolVar(&showTags, "tags", false, "Display tag names")
 	return cmd
 }

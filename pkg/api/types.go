@@ -173,3 +173,32 @@ type Repository struct {
 	CreationTime  time.Time `json:"creation_time"`
 	UpdateTime    time.Time `json:"update_time"`
 }
+
+// Artifact represents a Harbor artifact
+type Artifact struct {
+	ID         int64         `json:"id"`
+	Type       string        `json:"type"`
+	Digest     string        `json:"digest"`
+	Size       int64         `json:"size"`
+	Tags       []ArtifactTag `json:"tags"`
+	ExtraAttrs *ExtraAttrs   `json:"extra_attrs,omitempty"`
+	Signatures []Signature   `json:"signatures,omitempty"`
+}
+
+// ArtifactTag represents a tag associated with an artifact
+type ArtifactTag struct {
+	Name      string `json:"name"`
+	Signed    bool   `json:"signed"`
+	Immutable bool   `json:"immutable"`
+}
+
+// Signature represents a signature entry for an artifact
+type Signature struct {
+	Tag string `json:"tag"`
+}
+
+// ExtraAttrs contains additional artifact attributes
+type ExtraAttrs struct {
+	Architecture string `json:"architecture"`
+	OS           string `json:"os"`
+}

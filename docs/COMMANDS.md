@@ -155,6 +155,15 @@ hrbcli artifact list myproject/myapp --with-scan-overview
 hrbcli artifact list myproject/myapp --with-label
 ```
 
+#### `hrbcli artifact get`
+
+Display details for a specific artifact.
+
+```bash
+# Show artifact information
+hrbcli artifact get myproject/myapp:latest
+```
+
 #### `hrbcli artifact scan`
 
 Trigger vulnerability scan.

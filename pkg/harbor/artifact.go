@@ -18,6 +18,32 @@ func NewArtifactService(client *api.Client) *ArtifactService {
 	return &ArtifactService{client: client}
 }
 
+// Get retrieves details of a specific artifact
+func (s *ArtifactService) Get(project, repository, reference string) (*api.Artifact, error) {
+	projectEsc := url.PathEscape(project)
+	repoEsc := url.PathEscape(repository)
+	refEsc := url.PathEscape(reference)
+	path := fmt.Sprintf("/projects/%s/repositories/%s/artifacts/%s", projectEsc, repoEsc, refEsc)
+
+	params := map[string]string{
+		"with_tag":       "true",
+		"with_label":     "true",
+		"with_signature": "true",
+	}
+
+	resp, err := s.client.Get(path, params)
+	if err != nil {
+		return nil, err
+	}
+
+	var art api.Artifact
+	if err := s.client.DecodeResponse(resp, &art); err != nil {
+		return nil, fmt.Errorf("failed to decode artifact: %w", err)
+	}
+
+	return &art, nil
+}
+
 // Scan triggers vulnerability scan for the specified artifact
 func (s *ArtifactService) Scan(project, repository, reference string, scanType string) error {
 	projectEsc := url.PathEscape(project)
