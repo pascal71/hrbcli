@@ -211,6 +211,29 @@ hrbcli artifact copy myproject/myapp:v1.0 targetproject/myapp:v1.0
 hrbcli artifact copy myproject/myapp targetproject/myapp --all-tags
 ```
 
+### Scanner
+
+#### `hrbcli scanner running`
+
+Show running scans in a project or repository.
+
+```bash
+hrbcli scanner running myproject
+hrbcli scanner running myproject/myrepo
+```
+
+#### `hrbcli scanner scan`
+
+Trigger vulnerability scan for all artifacts in a project or repository.
+
+```bash
+# Scan all repositories in project
+hrbcli scanner scan myproject
+
+# Scan a single repository
+hrbcli scanner scan myproject/myrepo
+```
+
 ### User Management
 
 #### `hrbcli user list`

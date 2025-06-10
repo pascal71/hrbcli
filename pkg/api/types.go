@@ -176,13 +176,14 @@ type Repository struct {
 
 // Artifact represents a Harbor artifact
 type Artifact struct {
-	ID         int64         `json:"id"`
-	Type       string        `json:"type"`
-	Digest     string        `json:"digest"`
-	Size       int64         `json:"size"`
-	Tags       []ArtifactTag `json:"tags"`
-	ExtraAttrs *ExtraAttrs   `json:"extra_attrs,omitempty"`
-	Signatures []Signature   `json:"signatures,omitempty"`
+	ID           int64                          `json:"id"`
+	Type         string                         `json:"type"`
+	Digest       string                         `json:"digest"`
+	Size         int64                          `json:"size"`
+	Tags         []ArtifactTag                  `json:"tags"`
+	ExtraAttrs   *ExtraAttrs                    `json:"extra_attrs,omitempty"`
+	Signatures   []Signature                    `json:"signatures,omitempty"`
+	ScanOverview map[string]NativeReportSummary `json:"scan_overview,omitempty"`
 }
 
 // ArtifactTag represents a tag associated with an artifact
