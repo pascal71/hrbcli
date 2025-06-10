@@ -113,6 +113,8 @@ export HARBOR_USERNAME=admin
 export HARBOR_PASSWORD=secretpassword
 ```
 
+`HARBOR_PASSWORD` can hold either your Harbor account password or a robot account token. Set it as an environment variable to avoid storing credentials in your configuration file.
+
 ## Documentation
 
 - [Command Reference](docs/COMMANDS.md) - Detailed documentation for all commands
