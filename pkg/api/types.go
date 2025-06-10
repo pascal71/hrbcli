@@ -222,3 +222,29 @@ type ArtifactGetOptions struct {
 	WithSignature    bool `json:"-"`
 	WithScanOverview bool `json:"-"`
 }
+
+// Schedule represents a job schedule
+type Schedule struct {
+	Type string `json:"type"`
+	Cron string `json:"cron,omitempty"`
+}
+
+// ScheduleObj represents schedule information returned by Harbor
+type ScheduleObj struct {
+	Type              string    `json:"type"`
+	Cron              string    `json:"cron,omitempty"`
+	NextScheduledTime time.Time `json:"next_scheduled_time,omitempty"`
+}
+
+// GCHistory represents a garbage collection execution
+type GCHistory struct {
+	ID            int64        `json:"id"`
+	JobName       string       `json:"job_name"`
+	JobKind       string       `json:"job_kind"`
+	JobParameters string       `json:"job_parameters"`
+	Schedule      *ScheduleObj `json:"schedule,omitempty"`
+	JobStatus     string       `json:"job_status"`
+	Deleted       bool         `json:"deleted"`
+	CreationTime  time.Time    `json:"creation_time"`
+	UpdateTime    time.Time    `json:"update_time"`
+}
