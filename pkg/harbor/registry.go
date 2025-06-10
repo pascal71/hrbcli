@@ -159,8 +159,9 @@ func (s *RegistryService) GetInfo(registryType string) (*api.RegistryInfo, error
 	return info, nil
 }
 
-// ListAdapters lists all registry adapter information.
-// Harbor 2.6+ returns the details at `/replication/adapterinfos`.
+// ListAdapters lists available registry adapters
+
+
 func (s *RegistryService) ListAdapters() (map[string]*api.RegistryInfo, error) {
 	resp, err := s.client.Get("/replication/adapterinfos", nil)
 	if err != nil {
