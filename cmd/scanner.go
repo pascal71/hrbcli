@@ -29,7 +29,7 @@ func newScannerRunningCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "running <project>[/<repository>]",
 		Short: "Show running scans",
-		Args:  cobra.ExactArgs(1),
+		Args:  requireArgs(1, "requires <project>[/<repository>]"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			project, repo, err := parseProjectRepo(args[0])
 			if err != nil {
@@ -116,14 +116,13 @@ func newScannerRunningCmd() *cobra.Command {
 	return cmd
 }
 
-
 func newScannerScanCmd() *cobra.Command {
 	var scanType string
 
 	cmd := &cobra.Command{
 		Use:   "scan <project>[/<repository>]",
 		Short: "Trigger scan for artifacts",
-		Args:  cobra.ExactArgs(1),
+		Args:  requireArgs(1, "requires <project>[/<repository>]"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			project, repo, err := parseProjectRepo(args[0])
 			if err != nil {
@@ -173,4 +172,3 @@ func newScannerScanCmd() *cobra.Command {
 
 	return cmd
 }
-

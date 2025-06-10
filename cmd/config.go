@@ -194,7 +194,7 @@ func newConfigSetCmd() *cobra.Command {
   - default_project: Default project name
   - no_color: Disable colored output (true, false)
   - debug: Enable debug output (true, false)`,
-		Args: cobra.ExactArgs(2),
+		Args: requireArgs(2, "requires <key> and <value>"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key := args[0]
 			value := args[1]

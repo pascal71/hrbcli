@@ -286,7 +286,7 @@ func newRegistryGetCmd() *cobra.Command {
 		Use:   "get <id>",
 		Short: "Get registry details",
 		Long:  `Get detailed information about a registry endpoint.`,
-		Args:  cobra.ExactArgs(1),
+		Args:  requireArgs(1, "requires <id>"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := strconv.ParseInt(args[0], 10, 64)
 			if err != nil {
@@ -351,7 +351,7 @@ func newRegistryUpdateCmd() *cobra.Command {
 		Use:   "update <id>",
 		Short: "Update registry endpoint",
 		Long:  `Update an existing registry endpoint configuration.`,
-		Args:  cobra.ExactArgs(1),
+		Args:  requireArgs(1, "requires <id>"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := strconv.ParseInt(args[0], 10, 64)
 			if err != nil {
@@ -429,7 +429,7 @@ func newRegistryDeleteCmd() *cobra.Command {
 		Use:   "delete <id>",
 		Short: "Delete registry endpoint",
 		Long:  `Delete a registry endpoint. The registry must not be used by any replication rules.`,
-		Args:  cobra.ExactArgs(1),
+		Args:  requireArgs(1, "requires <id>"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := strconv.ParseInt(args[0], 10, 64)
 			if err != nil {
@@ -651,7 +651,7 @@ func newRegistryAdapterInfoCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "adapter-info [TYPE]",
 		Short: "Show detailed information about a registry adapter",
-		Args:  cobra.ExactArgs(1),
+		Args:  requireArgs(1, "requires registry type"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			adapterType := args[0]
 

@@ -118,7 +118,7 @@ func newUserCreateCmd() *cobra.Command {
 		Use:   "create <username>",
 		Short: "Create a new user",
 		Long:  `Create a new Harbor user.`,
-		Args:  cobra.ExactArgs(1),
+		Args:  requireArgs(1, "requires <username>"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			username := args[0]
 
@@ -184,7 +184,7 @@ func newUserDeleteCmd() *cobra.Command {
 		Use:   "delete <username>",
 		Short: "Delete a user",
 		Long:  `Delete a Harbor user by username.`,
-		Args:  cobra.ExactArgs(1),
+		Args:  requireArgs(1, "requires <username>"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			username := args[0]
 
