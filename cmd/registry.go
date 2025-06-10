@@ -2,11 +2,13 @@ package cmd
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
+
 	"github.com/pascal71/hrbcli/pkg/api"
 	"github.com/pascal71/hrbcli/pkg/harbor"
 	"github.com/pascal71/hrbcli/pkg/output"
@@ -28,6 +30,7 @@ func NewRegistryCmd() *cobra.Command {
 	cmd.AddCommand(newRegistryDeleteCmd())
 	cmd.AddCommand(newRegistryPingCmd())
 	cmd.AddCommand(newRegistryAdaptersCmd())
+	cmd.AddCommand(newRegistryAdapterInfoCmd())
 
 	return cmd
 }
@@ -138,14 +141,14 @@ func newRegistryCreateCmd() *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var name string
-			
+
 			if interactive {
 				// Interactive mode code here...
 				output.Info("Interactive mode not fully implemented yet")
 				return fmt.Errorf("please use command line flags")
 			} else {
 				name = args[0]
-				
+
 				// Validate required flags
 				if url == "" {
 					return fmt.Errorf("--url is required")
@@ -194,8 +197,12 @@ func newRegistryCreateCmd() *cobra.Command {
 				return fmt.Errorf("failed to create registry: %w", err)
 			}
 
-			output.Success("Registry endpoint '%s' created successfully (ID: %d)", name, registry.ID)
-			
+			output.Success(
+				"Registry endpoint '%s' created successfully (ID: %d)",
+				name,
+				registry.ID,
+			)
+
 			return nil
 		},
 	}
@@ -251,11 +258,11 @@ func newRegistryGetCmd() *cobra.Command {
 				fmt.Printf("Insecure:    %v\n", registry.Insecure)
 				fmt.Printf("Created:     %s\n", registry.CreationTime.Format("2006-01-02 15:04:05"))
 				fmt.Printf("Updated:     %s\n", registry.UpdateTime.Format("2006-01-02 15:04:05"))
-				
+
 				if registry.Description != "" {
 					fmt.Printf("Description: %s\n", registry.Description)
 				}
-				
+
 				if registry.Credential != nil {
 					output.Info("\nCredentials:")
 					fmt.Printf("  Type:     %s\n", registry.Credential.Type)
@@ -273,8 +280,8 @@ func newRegistryUpdateCmd() *cobra.Command {
 		url         string
 		description string
 		// insecure    *bool
-		username    string
-		password    string
+		username string
+		password string
 	)
 
 	cmd := &cobra.Command{
@@ -447,26 +454,173 @@ func newRegistryAdaptersCmd() *cobra.Command {
 			case "yaml":
 				return output.YAML(adapters)
 			default:
+				// Sort adapter types for consistent display
+				var types []string
+				for adapterType := range adapters {
+					types = append(types, adapterType)
+				}
+
+				// Add known registry types that might not be in the response
+				knownTypes := []string{
+					"harbor", "docker-hub", "dockerregistry", "aws-ecr", "google-gcr",
+					"azure-acr", "quay", "jfrog-artifactory", "gitlab", "github-ghcr",
+					"ali-acr", "huawei-SWR", "tencent-tcr", "volcengine-cr",
+				}
+
+				// Add known types that aren't in the response
+				for _, knownType := range knownTypes {
+					found := false
+					for _, t := range types {
+						if t == knownType {
+							found = true
+							break
+						}
+					}
+					if !found {
+						types = append(types, knownType)
+					}
+				}
+				sort.Strings(types)
+
+				// Create table
 				table := output.Table()
-				headers := []string{"TYPE", "DESCRIPTION", "SUPPORTED RESOURCES", "SUPPORTED FILTERS"}
+				headers := []string{
+					"TYPE",
+					"DESCRIPTION",
+					"SUPPORTED RESOURCES",
+					"SUPPORTED FILTERS",
+				}
 				table.Append(headers)
 
-				for name, info := range adapters {
-					row := []string{
-						name,
-						info.Description,
-						strings.Join(info.SupportedTypes, ", "),
-						strings.Join(info.Filters, ", "),
+				for _, adapterType := range types {
+					info, exists := adapters[adapterType]
+
+					description := ""
+					resources := ""
+					filters := ""
+
+					if exists && info != nil {
+						// Use actual fields from api.RegistryInfo
+						description = info.Description
+						if len(info.SupportedTypes) > 0 {
+							resources = strings.Join(info.SupportedTypes, ", ")
+						}
+						if len(info.Filters) > 0 {
+							filters = strings.Join(info.Filters, ", ")
+						}
+					} else {
+						// For known types not in response, use defaults
+						description = getAdapterDescription(adapterType)
+						resources = "image"
+						filters = "name, tag"
 					}
-					table.Append(row)
+
+					table.Append([]string{adapterType, description, resources, filters})
 				}
 
 				table.Render()
+
+				fmt.Println(
+					"\nNote: Adapters marked with default values are known types but not configured in your Harbor instance.",
+				)
 			}
 
 			return nil
 		},
 	}
+}
+
+func newRegistryAdapterInfoCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "adapter-info [TYPE]",
+		Short: "Show detailed information about a registry adapter",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			adapterType := args[0]
+
+			client, err := api.NewClient()
+			if err != nil {
+				return err
+			}
+
+			registrySvc := harbor.NewRegistryService(client)
+			adapters, err := registrySvc.ListAdapters()
+			if err != nil {
+				return fmt.Errorf("failed to list adapters: %w", err)
+			}
+
+			info, exists := adapters[adapterType]
+
+			// Display adapter information
+			fmt.Printf("Adapter Type: %s\n", adapterType)
+			fmt.Printf("Description: %s\n", getAdapterDescription(adapterType))
+			fmt.Println(strings.Repeat("-", 50))
+
+			if exists {
+				fmt.Println("Status: Available in your Harbor instance")
+
+				// Display the raw info as JSON for debugging
+				fmt.Println("\nAdapter Configuration:")
+				output.JSON(info)
+			} else {
+				// Check if it's a known type
+				knownTypes := []string{
+					"harbor", "docker-hub", "dockerregistry", "aws-ecr", "google-gcr",
+					"azure-acr", "quay", "jfrog-artifactory", "gitlab", "github-ghcr",
+					"ali-acr", "huawei-SWR", "tencent-tcr", "volcengine-cr",
+				}
+
+				isKnown := false
+				for _, known := range knownTypes {
+					if known == adapterType {
+						isKnown = true
+						break
+					}
+				}
+
+				if !isKnown {
+					return fmt.Errorf("adapter type '%s' not found", adapterType)
+				}
+
+				fmt.Println("Status: Not configured in your Harbor instance")
+			}
+
+			// Common information for all adapters
+			fmt.Println("\nSupported Features:")
+			fmt.Println("  - Resource Types: image")
+			fmt.Println("  - Filters: name, tag")
+			fmt.Println("  - Triggers: manual, scheduled, event-based")
+
+			return nil
+		},
+	}
+
+	return cmd
+}
+
+// Helper function to get adapter descriptions
+func getAdapterDescription(adapterType string) string {
+	descriptions := map[string]string{
+		"harbor":            "Harbor Registry",
+		"docker-hub":        "Docker Hub",
+		"dockerregistry":    "Docker Registry V2",
+		"aws-ecr":           "AWS Elastic Container Registry",
+		"google-gcr":        "Google Container Registry",
+		"azure-acr":         "Azure Container Registry",
+		"quay":              "Red Hat Quay",
+		"jfrog-artifactory": "JFrog Artifactory",
+		"gitlab":            "GitLab Container Registry",
+		"github-ghcr":       "GitHub Container Registry",
+		"ali-acr":           "Alibaba Cloud Container Registry",
+		"huawei-SWR":        "Huawei Cloud SWR",
+		"tencent-tcr":       "Tencent Cloud Container Registry",
+		"volcengine-cr":     "Volcengine Container Registry",
+	}
+
+	if desc, ok := descriptions[adapterType]; ok {
+		return desc
+	}
+	return "Container Registry"
 }
 
 // getDefaultURL returns the default URL for a registry type
