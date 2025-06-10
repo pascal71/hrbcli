@@ -229,7 +229,10 @@ func newArtifactListCmd() *cobra.Command {
 }
 
 func newArtifactVulnCmd() *cobra.Command {
-	var severity string
+	var (
+		severity string
+		summary  bool
+	)
 
 	cmd := &cobra.Command{
 		Use:   "vulnerabilities <project>/<repository>[:tag|@digest]",
@@ -247,6 +250,32 @@ func newArtifactVulnCmd() *cobra.Command {
 			}
 
 			artSvc := harbor.NewArtifactService(client)
+
+			if summary {
+				art, err := artSvc.GetWithOptions(project, repo, ref, &api.ArtifactGetOptions{WithScanOverview: true})
+				if err != nil {
+					return fmt.Errorf("failed to get summary: %w", err)
+				}
+				if len(art.ScanOverview) == 0 {
+					output.Info("No vulnerability summary available")
+					return nil
+				}
+				switch output.GetFormat() {
+				case "json":
+					return output.JSON(art.ScanOverview)
+				case "yaml":
+					return output.YAML(art.ScanOverview)
+				default:
+					table := output.Table()
+					table.Append([]string{"SCANNER", "STATUS", "SEVERITY", "COMPLETE"})
+					for name, ov := range art.ScanOverview {
+						table.Append([]string{name, ov.ScanStatus, ov.Severity, fmt.Sprintf("%d%%", ov.CompletePct)})
+					}
+					table.Render()
+					return nil
+				}
+			}
+
 			report, err := artSvc.Vulnerabilities(project, repo, ref)
 			if err != nil {
 				return fmt.Errorf("failed to get vulnerabilities: %w", err)
@@ -295,6 +324,7 @@ func newArtifactVulnCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&severity, "severity", "", "Fail if vulnerabilities of this severity or higher are found")
+	cmd.Flags().BoolVar(&summary, "summary", false, "Show vulnerability summary instead of detailed report")
 
 	return cmd
 }
