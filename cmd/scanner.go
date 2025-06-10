@@ -22,6 +22,8 @@ func NewScannerCmd() *cobra.Command {
 
 	cmd.AddCommand(newScannerScanCmd())
 
+	cmd.AddCommand(newScannerReportsCmd())
+
 	return cmd
 }
 
@@ -169,6 +171,133 @@ func newScannerScanCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&scanType, "scan-type", "", "Scan type (vulnerability|sbom)")
+
+	return cmd
+}
+
+func newScannerReportsCmd() *cobra.Command {
+	var reportType string
+	var summary bool
+
+	cmd := &cobra.Command{
+		Use:   "reports <project>[/<repository>]",
+		Short: "Get reports for artifacts",
+		Args:  requireArgs(1, "requires <project>[/<repository>]"),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			project, repo, err := parseProjectRepo(args[0])
+			if err != nil {
+				return err
+			}
+
+			client, err := api.NewClient()
+			if err != nil {
+				return err
+			}
+
+			repoSvc := harbor.NewRepositoryService(client)
+			artSvc := harbor.NewArtifactService(client)
+
+			var repos []string
+			if repo != "" {
+				repos = []string{repo}
+			} else {
+				list, err := repoSvc.List(project, nil)
+				if err != nil {
+					return fmt.Errorf("failed to list repositories: %w", err)
+				}
+				for _, r := range list {
+					repos = append(repos, strings.TrimPrefix(r.Name, project+"/"))
+				}
+			}
+
+			type entry struct {
+				Repository string      `json:"repository"`
+				Reference  string      `json:"reference"`
+				Report     interface{} `json:"report"`
+			}
+			var reports []entry
+
+			for _, r := range repos {
+				arts, err := artSvc.List(project, r, &api.ArtifactListOptions{WithTag: true, WithScanOverview: summary})
+				if err != nil {
+					return fmt.Errorf("failed to list artifacts for %s: %w", r, err)
+				}
+				for _, a := range arts {
+					ref := a.Digest
+					if len(a.Tags) > 0 {
+						ref = a.Tags[0].Name
+					}
+
+					if summary {
+						reports = append(reports, entry{Repository: r, Reference: ref, Report: a.ScanOverview})
+						continue
+					}
+
+					if strings.ToLower(reportType) == "sbom" {
+						report, err := artSvc.SBOM(project, r, a.Digest)
+						if err != nil {
+							output.Warning("Failed to get SBOM for %s/%s@%s: %v", project, r, output.Truncate(a.Digest, 13), err)
+							continue
+						}
+						reports = append(reports, entry{Repository: r, Reference: ref, Report: report})
+					} else {
+						report, err := artSvc.Vulnerabilities(project, r, a.Digest)
+						if err != nil {
+							output.Warning("Failed to get vulnerabilities for %s/%s@%s: %v", project, r, output.Truncate(a.Digest, 13), err)
+							continue
+						}
+						reports = append(reports, entry{Repository: r, Reference: ref, Report: report})
+					}
+				}
+			}
+
+			if len(reports) == 0 {
+				output.Info("No reports found")
+				return nil
+			}
+
+			switch output.GetFormat() {
+			case "json":
+				return output.JSON(reports)
+			case "yaml":
+				return output.YAML(reports)
+			default:
+				table := output.Table()
+				if summary {
+					table.Append([]string{"REPOSITORY", "REFERENCE", "SCANNER", "STATUS", "SEVERITY"})
+					for _, e := range reports {
+						overview, ok := e.Report.(map[string]api.NativeReportSummary)
+						if !ok {
+							continue
+						}
+						for name, ov := range overview {
+							table.Append([]string{e.Repository, e.Reference, name, ov.ScanStatus, ov.Severity})
+						}
+					}
+				} else if strings.ToLower(reportType) == "sbom" {
+					table.Append([]string{"REPOSITORY", "REFERENCE", "SBOM"})
+					for _, e := range reports {
+						table.Append([]string{e.Repository, e.Reference, "available"})
+					}
+				} else {
+					table.Append([]string{"REPOSITORY", "REFERENCE", "VULNERABILITIES"})
+					for _, e := range reports {
+						rep, ok := e.Report.(*api.VulnerabilityReport)
+						if !ok || rep == nil {
+							table.Append([]string{e.Repository, e.Reference, ""})
+							continue
+						}
+						table.Append([]string{e.Repository, e.Reference, fmt.Sprintf("%d", len(rep.Vulnerabilities))})
+					}
+				}
+				table.Render()
+				return nil
+			}
+		},
+	}
+
+	cmd.Flags().StringVar(&reportType, "type", "vulnerability", "Report type (vulnerability|sbom)")
+	cmd.Flags().BoolVar(&summary, "summary", false, "Show summary instead of full report")
 
 	return cmd
 }

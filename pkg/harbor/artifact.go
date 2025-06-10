@@ -62,15 +62,35 @@ func (s *ArtifactService) List(project, repository string, opts *api.ArtifactLis
 
 // Get retrieves details of a specific artifact
 func (s *ArtifactService) Get(project, repository, reference string) (*api.Artifact, error) {
+	opts := &api.ArtifactGetOptions{
+		WithTag:       true,
+		WithLabel:     true,
+		WithSignature: true,
+	}
+	return s.GetWithOptions(project, repository, reference, opts)
+}
+
+// GetWithOptions retrieves details of a specific artifact with optional parameters
+func (s *ArtifactService) GetWithOptions(project, repository, reference string, opts *api.ArtifactGetOptions) (*api.Artifact, error) {
 	projectEsc := url.PathEscape(project)
 	repoEsc := url.PathEscape(repository)
 	refEsc := url.PathEscape(reference)
 	path := fmt.Sprintf("/projects/%s/repositories/%s/artifacts/%s", projectEsc, repoEsc, refEsc)
 
-	params := map[string]string{
-		"with_tag":       "true",
-		"with_label":     "true",
-		"with_signature": "true",
+	params := make(map[string]string)
+	if opts != nil {
+		if opts.WithTag {
+			params["with_tag"] = "true"
+		}
+		if opts.WithLabel {
+			params["with_label"] = "true"
+		}
+		if opts.WithSignature {
+			params["with_signature"] = "true"
+		}
+		if opts.WithScanOverview {
+			params["with_scan_overview"] = "true"
+		}
 	}
 
 	resp, err := s.client.Get(path, params)
