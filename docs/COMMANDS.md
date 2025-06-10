@@ -181,7 +181,8 @@ hrbcli artifact scan myproject/myapp --all
 
 #### `hrbcli artifact vulnerabilities`
 
-Show vulnerability report for an artifact. Use `--summary` for an overview or `--severity` to fail if vulnerabilities of that level or higher exist.
+Show vulnerability report for an artifact. Use `--summary` for an overview with counts by severity, or `--severity` to fail if vulnerabilities of that level or higher exist.
+
 
 ```bash
 # Show vulnerabilities
@@ -234,9 +235,12 @@ hrbcli scanner scan myproject
 hrbcli scanner scan myproject/myrepo
 ```
 
+
+
 #### `hrbcli scanner reports`
 
-Retrieve vulnerability or SBOM reports for artifacts in a project or repository.
+Retrieve vulnerability or SBOM reports for artifacts in a project or repository. When used with `--summary`, displays counts of vulnerabilities by severity for each artifact.
+
 
 ```bash
 # Vulnerability summary for a project

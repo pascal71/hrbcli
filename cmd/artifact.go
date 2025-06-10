@@ -267,9 +267,21 @@ func newArtifactVulnCmd() *cobra.Command {
 					return output.YAML(art.ScanOverview)
 				default:
 					table := output.Table()
-					table.Append([]string{"SCANNER", "STATUS", "SEVERITY", "COMPLETE"})
+
+					table.Append([]string{"SCANNER", "STATUS", "SEVERITY", "TOTAL", "CRITICAL", "HIGH", "MEDIUM", "LOW"})
 					for name, ov := range art.ScanOverview {
-						table.Append([]string{name, ov.ScanStatus, ov.Severity, fmt.Sprintf("%d%%", ov.CompletePct)})
+						sum := ov.Summary.Summary
+						table.Append([]string{
+							name,
+							ov.ScanStatus,
+							ov.Severity,
+							fmt.Sprintf("%d", ov.Summary.Total),
+							fmt.Sprintf("%d", sum["Critical"]),
+							fmt.Sprintf("%d", sum["High"]),
+							fmt.Sprintf("%d", sum["Medium"]),
+							fmt.Sprintf("%d", sum["Low"]),
+						})
+
 					}
 					table.Render()
 					return nil
