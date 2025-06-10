@@ -89,3 +89,45 @@ func (s *SystemService) UpdateConfig(cfg map[string]interface{}) error {
 
 	return nil
 }
+
+// ScheduleGC triggers a manual garbage collection job.
+func (s *SystemService) ScheduleGC() error {
+	body := map[string]interface{}{
+		"schedule": map[string]string{"type": "Manual"},
+	}
+	resp, err := s.client.Post("/system/gc/schedule", body)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+	return nil
+}
+
+// GetGCHistory retrieves history of garbage collection executions.
+func (s *SystemService) GetGCHistory() ([]*api.GCHistory, error) {
+	resp, err := s.client.Get("/system/gc", nil)
+	if err != nil {
+		return nil, err
+	}
+	var history []*api.GCHistory
+	if err := s.client.DecodeResponse(resp, &history); err != nil {
+		return nil, fmt.Errorf("failed to decode gc history: %w", err)
+	}
+	return history, nil
+}
+
+// GetGC retrieves a garbage collection execution by id.
+func (s *SystemService) GetGC(id int64) (*api.GCHistory, error) {
+	resp, err := s.client.Get(fmt.Sprintf("/system/gc/%d", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	var gc api.GCHistory
+	if err := s.client.DecodeResponse(resp, &gc); err != nil {
+		return nil, fmt.Errorf("failed to decode gc status: %w", err)
+	}
+	return &gc, nil
+}
