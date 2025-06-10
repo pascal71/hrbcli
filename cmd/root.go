@@ -97,6 +97,7 @@ func init() {
 	rootCmd.AddCommand(NewReplicationCmd())
 	rootCmd.AddCommand(NewDistributionCmd())
 	rootCmd.AddCommand(NewScannerCmd())
+	rootCmd.AddCommand(NewJobServiceCmd())
 	// rootCmd.AddCommand(NewUserCmd())
 	rootCmd.AddCommand(NewSystemCmd())
 	rootCmd.AddCommand(NewConfigCmd())

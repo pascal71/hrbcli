@@ -222,3 +222,32 @@ type ArtifactGetOptions struct {
 	WithSignature    bool `json:"-"`
 	WithScanOverview bool `json:"-"`
 }
+
+// WorkerPool represents a job service worker pool
+type WorkerPool struct {
+	PID          int64     `json:"pid"`
+	WorkerPoolID string    `json:"worker_pool_id"`
+	StartAt      time.Time `json:"start_at"`
+	HeartbeatAt  time.Time `json:"heartbeat_at"`
+	Concurrency  int       `json:"concurrency"`
+	Host         string    `json:"host"`
+}
+
+// Worker represents a worker in a pool
+type Worker struct {
+	ID        string    `json:"id"`
+	PoolID    string    `json:"pool_id"`
+	JobName   string    `json:"job_name"`
+	JobID     string    `json:"job_id"`
+	StartAt   time.Time `json:"start_at"`
+	CheckIn   string    `json:"check_in"`
+	CheckInAt time.Time `json:"checkin_at"`
+}
+
+// JobQueue represents a job queue summary
+type JobQueue struct {
+	JobType string `json:"job_type"`
+	Count   int    `json:"count"`
+	Latency int    `json:"latency"`
+	Paused  bool   `json:"paused"`
+}

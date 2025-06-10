@@ -84,8 +84,10 @@ hrbcli system info
 # Show Harbor statistics
 hrbcli system statistics
 
-# View Harbor configuration
-hrbcli system config get
+
+# Show job service dashboard
+hrbcli jobservice dashboard
+
 
 ```
 
