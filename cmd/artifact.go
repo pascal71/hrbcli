@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -29,7 +30,10 @@ func NewArtifactCmd() *cobra.Command {
 }
 
 func newArtifactScanCmd() *cobra.Command {
-	var scanType string
+	var (
+		scanType string
+		wait     bool
+	)
 
 	cmd := &cobra.Command{
 		Use:   "scan <project>/<repository>[:tag|@digest]",
@@ -53,11 +57,45 @@ func newArtifactScanCmd() *cobra.Command {
 			}
 
 			output.Success("Scan triggered for %s/%s:%s", project, repo, ref)
+
+			if wait {
+				ctx := cmd.Context()
+				for {
+					select {
+					case <-ctx.Done():
+						return ctx.Err()
+					default:
+					}
+
+					art, err := artSvc.GetWithOptions(project, repo, ref, &api.ArtifactGetOptions{WithScanOverview: true})
+					if err != nil {
+						return fmt.Errorf("failed to get scan status: %w", err)
+					}
+
+					done := true
+					for _, ov := range art.ScanOverview {
+						status := strings.ToLower(ov.ScanStatus)
+						if status != "success" && status != "finished" {
+							done = false
+							break
+						}
+					}
+
+					if done {
+						output.Success("Scan completed for %s/%s:%s", project, repo, ref)
+						return nil
+					}
+
+					time.Sleep(2 * time.Second)
+				}
+			}
+
 			return nil
 		},
 	}
 
 	cmd.Flags().StringVar(&scanType, "scan-type", "", "Scan type (vulnerability|sbom)")
+	cmd.Flags().BoolVar(&wait, "wait", false, "Wait for scan to complete")
 
 	return cmd
 }
