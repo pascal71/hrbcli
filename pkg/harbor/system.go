@@ -59,11 +59,19 @@ func (s *SystemService) GetConfig() (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	var cfg map[string]interface{}
-	if err := s.client.DecodeResponse(resp, &cfg); err != nil {
+	// API returns map of objects with `value` and `editable` fields.
+	raw := make(map[string]struct {
+		Value    interface{} `json:"value"`
+		Editable bool        `json:"editable"`
+	})
+	if err := s.client.DecodeResponse(resp, &raw); err != nil {
 		return nil, fmt.Errorf("failed to decode configuration: %w", err)
 	}
 
+	cfg := make(map[string]interface{}, len(raw))
+	for k, v := range raw {
+		cfg[k] = v.Value
+	}
 	return cfg, nil
 }
 
