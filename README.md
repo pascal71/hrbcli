@@ -100,6 +100,7 @@ hrbcli scanner scan <project>
 hrbcli scanner running <project>
 hrbcli scanner reports <project> --summary
 hrbcli scanner reports <project> --sort repo
+hrbcli scanner reports <project> --sort crit
 ```
 
 ### Distribution Commands
