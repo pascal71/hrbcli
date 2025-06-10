@@ -95,6 +95,9 @@ func init() {
 	rootCmd.AddCommand(NewUserCmd())
 	rootCmd.AddCommand(NewRepositoryCmd())
 	rootCmd.AddCommand(NewReplicationCmd())
+
+	rootCmd.AddCommand(NewScannerCmd())
+	// rootCmd.AddCommand(NewUserCmd())
 	rootCmd.AddCommand(NewSystemCmd())
 	rootCmd.AddCommand(NewConfigCmd())
 	rootCmd.AddCommand(NewVersionCmd())

@@ -15,3 +15,13 @@ type VulnerabilityItem struct {
 	FixedVersion string `json:"fix_version"`
 	Severity     string `json:"severity"`
 }
+
+// NativeReportSummary represents the summary of a scan report
+// attached to an artifact. Only fields relevant for displaying
+// running scans are included.
+type NativeReportSummary struct {
+	ReportID    string `json:"report_id"`
+	ScanStatus  string `json:"scan_status"`
+	Severity    string `json:"severity"`
+	CompletePct int    `json:"complete_percent"`
+}
