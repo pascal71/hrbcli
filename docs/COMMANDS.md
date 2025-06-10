@@ -417,11 +417,15 @@ hrbcli replication statistics
 
 #### `hrbcli replication execute`
 
-Execute replication manually.
+Execute replication manually. The replication policy can be specified either by
+ID or by name using `--policy-name`.
 
 ```bash
-# Execute replication
+# Execute replication by name
 hrbcli replication execute prod-sync
+
+# Execute using the flag
+hrbcli replication execute --policy-name prod-sync
 
 # Dry run
 hrbcli replication execute prod-sync --dry-run

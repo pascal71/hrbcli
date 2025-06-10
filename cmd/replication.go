@@ -162,15 +162,40 @@ func newReplicationDeleteCmd() *cobra.Command {
 }
 
 func newReplicationExecuteCmd() *cobra.Command {
+	var policyName string
 	cmd := &cobra.Command{
-		Use:   "execute <policy-id>",
+		Use:   "execute [policy-id]",
 		Short: "Trigger replication execution",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			id, err := strconv.ParseInt(args[0], 10, 64)
-			if err != nil {
-				return fmt.Errorf("invalid id: %w", err)
+			if len(args) == 0 && policyName == "" {
+				return fmt.Errorf("policy ID argument or --policy-name is required")
 			}
+
+			var id int64
+			var err error
+
+			if len(args) == 1 {
+				if policyName != "" {
+					return fmt.Errorf("provide either policy ID argument or --policy-name, not both")
+				}
+				id, err = strconv.ParseInt(args[0], 10, 64)
+				if err != nil {
+					return fmt.Errorf("invalid id: %w", err)
+				}
+			} else {
+				// Resolve policy ID by name
+				client, err := api.NewClient()
+				if err != nil {
+					return err
+				}
+				svc := harbor.NewReplicationService(client)
+				id, err = svc.ResolvePolicyID(policyName)
+				if err != nil {
+					return err
+				}
+			}
+
 			client, err := api.NewClient()
 			if err != nil {
 				return err
@@ -184,6 +209,7 @@ func newReplicationExecuteCmd() *cobra.Command {
 			return nil
 		},
 	}
+	cmd.Flags().StringVar(&policyName, "policy-name", "", "Replication policy name (alternative to policy-id)")
 	return cmd
 }
 
