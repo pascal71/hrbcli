@@ -297,6 +297,7 @@ func newArtifactVulnCmd() *cobra.Command {
 	var (
 		severity string
 		summary  bool
+		outFile  string
 	)
 
 	cmd := &cobra.Command{
@@ -323,6 +324,17 @@ func newArtifactVulnCmd() *cobra.Command {
 				}
 				if len(art.ScanOverview) == 0 {
 					output.Info("No vulnerability summary available")
+					return nil
+				}
+				if outFile != "" {
+					format := output.GetFormat()
+					if format != "yaml" {
+						format = "json"
+					}
+					if err := output.WriteFile(outFile, format, art.ScanOverview); err != nil {
+						return fmt.Errorf("failed to write report: %w", err)
+					}
+					output.Success("Saved report to %s", outFile)
 					return nil
 				}
 				switch output.GetFormat() {
@@ -372,6 +384,17 @@ func newArtifactVulnCmd() *cobra.Command {
 				return nil
 			}
 
+			if outFile != "" {
+				format := output.GetFormat()
+				if format != "yaml" {
+					format = "json"
+				}
+				if err := output.WriteFile(outFile, format, report); err != nil {
+					return fmt.Errorf("failed to write report: %w", err)
+				}
+				output.Success("Saved report to %s", outFile)
+			}
+
 			sevOrder := map[string]int{"none": 0, "negligible": 1, "low": 2, "medium": 3, "high": 4, "critical": 5}
 			var vulns []api.VulnerabilityItem
 			normalized := strings.ToLower(severity)
@@ -384,21 +407,23 @@ func newArtifactVulnCmd() *cobra.Command {
 				vulns = append(vulns, v)
 			}
 
-			if len(vulns) == 0 {
-				output.Info("No vulnerabilities found")
-			} else {
-				switch output.GetFormat() {
-				case "json":
-					return output.JSON(vulns)
-				case "yaml":
-					return output.YAML(vulns)
-				default:
-					table := output.Table()
-					table.Append([]string{"SEVERITY", "CVE", "PACKAGE", "VERSION", "FIXED VERSION"})
-					for _, v := range vulns {
-						table.Append([]string{v.Severity, v.CVEID, v.Package, v.Version, v.FixedVersion})
+			if outFile == "" {
+				if len(vulns) == 0 {
+					output.Info("No vulnerabilities found")
+				} else {
+					switch output.GetFormat() {
+					case "json":
+						return output.JSON(vulns)
+					case "yaml":
+						return output.YAML(vulns)
+					default:
+						table := output.Table()
+						table.Append([]string{"SEVERITY", "CVE", "PACKAGE", "VERSION", "FIXED VERSION"})
+						for _, v := range vulns {
+							table.Append([]string{v.Severity, v.CVEID, v.Package, v.Version, v.FixedVersion})
+						}
+						table.Render()
 					}
-					table.Render()
 				}
 			}
 
@@ -411,11 +436,14 @@ func newArtifactVulnCmd() *cobra.Command {
 
 	cmd.Flags().StringVar(&severity, "severity", "", "Fail if vulnerabilities of this severity or higher are found")
 	cmd.Flags().BoolVar(&summary, "summary", false, "Show vulnerability summary instead of detailed report")
+	cmd.Flags().StringVarP(&outFile, "file", "f", "", "Save report to file")
 
 	return cmd
 }
 
 func newArtifactSbomCmd() *cobra.Command {
+	var outFile string
+
 	cmd := &cobra.Command{
 		Use:   "sbom <project>/<repository>[:tag|@digest]",
 		Short: "Show SBOM report",
@@ -442,6 +470,18 @@ func newArtifactSbomCmd() *cobra.Command {
 				return nil
 			}
 
+			if outFile != "" {
+				format := output.GetFormat()
+				if format != "yaml" {
+					format = "json"
+				}
+				if err := output.WriteFile(outFile, format, report); err != nil {
+					return fmt.Errorf("failed to write report: %w", err)
+				}
+				output.Success("Saved report to %s", outFile)
+				return nil
+			}
+
 			switch output.GetFormat() {
 			case "yaml":
 				return output.YAML(report)
@@ -450,6 +490,8 @@ func newArtifactSbomCmd() *cobra.Command {
 			}
 		},
 	}
+
+	cmd.Flags().StringVarP(&outFile, "file", "f", "", "Save report to file")
 
 	return cmd
 }

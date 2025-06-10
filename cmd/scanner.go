@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -178,6 +180,7 @@ func newScannerScanCmd() *cobra.Command {
 func newScannerReportsCmd() *cobra.Command {
 	var reportType string
 	var summary bool
+	var outputDir string
 
 	cmd := &cobra.Command{
 		Use:   "reports <project>[/<repository>]",
@@ -196,6 +199,12 @@ func newScannerReportsCmd() *cobra.Command {
 
 			repoSvc := harbor.NewRepositoryService(client)
 			artSvc := harbor.NewArtifactService(client)
+
+			if outputDir != "" {
+				if err := os.MkdirAll(outputDir, 0755); err != nil {
+					return fmt.Errorf("failed to create directory: %w", err)
+				}
+			}
 
 			var repos []string
 			if repo != "" {
@@ -229,7 +238,20 @@ func newScannerReportsCmd() *cobra.Command {
 					}
 
 					if summary {
-						reports = append(reports, entry{Repository: r, Reference: ref, Report: a.ScanOverview})
+						if outputDir != "" {
+							ext := "json"
+							if output.GetFormat() == "yaml" {
+								ext = "yaml"
+							}
+							name := fmt.Sprintf("%s_%s_summary.%s", strings.ReplaceAll(r, "/", "_"), strings.ReplaceAll(strings.ReplaceAll(ref, ":", "_"), "/", "_"), ext)
+							path := filepath.Join(outputDir, name)
+							if err := output.WriteFile(path, ext, a.ScanOverview); err != nil {
+								return fmt.Errorf("failed to write report: %w", err)
+							}
+							output.Success("Saved report to %s", path)
+						} else {
+							reports = append(reports, entry{Repository: r, Reference: ref, Report: a.ScanOverview})
+						}
 						continue
 					}
 
@@ -239,16 +261,46 @@ func newScannerReportsCmd() *cobra.Command {
 							output.Warning("Failed to get SBOM for %s/%s@%s: %v", project, r, output.Truncate(a.Digest, 13), err)
 							continue
 						}
-						reports = append(reports, entry{Repository: r, Reference: ref, Report: report})
+						if outputDir != "" {
+							ext := "json"
+							if output.GetFormat() == "yaml" {
+								ext = "yaml"
+							}
+							name := fmt.Sprintf("%s_%s_sbom.%s", strings.ReplaceAll(r, "/", "_"), strings.ReplaceAll(strings.ReplaceAll(ref, ":", "_"), "/", "_"), ext)
+							path := filepath.Join(outputDir, name)
+							if err := output.WriteFile(path, ext, report); err != nil {
+								return fmt.Errorf("failed to write report: %w", err)
+							}
+							output.Success("Saved report to %s", path)
+						} else {
+							reports = append(reports, entry{Repository: r, Reference: ref, Report: report})
+						}
 					} else {
 						report, err := artSvc.Vulnerabilities(project, r, a.Digest)
 						if err != nil {
 							output.Warning("Failed to get vulnerabilities for %s/%s@%s: %v", project, r, output.Truncate(a.Digest, 13), err)
 							continue
 						}
-						reports = append(reports, entry{Repository: r, Reference: ref, Report: report})
+						if outputDir != "" {
+							ext := "json"
+							if output.GetFormat() == "yaml" {
+								ext = "yaml"
+							}
+							name := fmt.Sprintf("%s_%s_vuln.%s", strings.ReplaceAll(r, "/", "_"), strings.ReplaceAll(strings.ReplaceAll(ref, ":", "_"), "/", "_"), ext)
+							path := filepath.Join(outputDir, name)
+							if err := output.WriteFile(path, ext, report); err != nil {
+								return fmt.Errorf("failed to write report: %w", err)
+							}
+							output.Success("Saved report to %s", path)
+						} else {
+							reports = append(reports, entry{Repository: r, Reference: ref, Report: report})
+						}
 					}
 				}
+			}
+
+			if outputDir != "" {
+				return nil
 			}
 
 			if len(reports) == 0 {
@@ -319,6 +371,7 @@ func newScannerReportsCmd() *cobra.Command {
 
 	cmd.Flags().StringVar(&reportType, "type", "vulnerability", "Report type (vulnerability|sbom)")
 	cmd.Flags().BoolVar(&summary, "summary", false, "Show summary instead of full report")
+	cmd.Flags().StringVar(&outputDir, "output-dir", "", "Directory to save reports")
 
 	return cmd
 }

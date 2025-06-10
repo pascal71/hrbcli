@@ -184,7 +184,7 @@ hrbcli artifact scan myproject/myapp:latest --wait
 
 #### `hrbcli artifact vulnerabilities`
 
-Show vulnerability report for an artifact. Use `--summary` for an overview with counts by severity, or `--severity` to fail if vulnerabilities of that level or higher exist.
+Show vulnerability report for an artifact. Use `--summary` for an overview with counts by severity, or `--severity` to fail if vulnerabilities of that level or higher exist. The report can be saved to a file using `--file`.
 
 
 ```bash
@@ -193,14 +193,20 @@ hrbcli artifact vulnerabilities myproject/myapp:latest
 
 # Fail if high or critical vulns found
 hrbcli artifact vulnerabilities myproject/myapp:latest --severity high
+
+# Save report to file
+hrbcli artifact vulnerabilities myproject/myapp:latest --file vulns.json -o json
 ```
 
 #### `hrbcli artifact sbom`
 
-Display the SBOM report for an artifact.
+Display the SBOM report for an artifact. Use `--file` to save the report locally.
 
 ```bash
 hrbcli artifact sbom myproject/myapp:latest -o json
+
+# Download SBOM to a file
+hrbcli artifact sbom myproject/myapp:latest --file sbom.json
 ```
 
 #### `hrbcli artifact copy`
@@ -242,7 +248,7 @@ hrbcli scanner scan myproject/myrepo
 
 #### `hrbcli scanner reports`
 
-Retrieve vulnerability or SBOM reports for artifacts in a project or repository. When used with `--summary`, displays counts of vulnerabilities by severity for each artifact.
+Retrieve vulnerability or SBOM reports for artifacts in a project or repository. When used with `--summary`, displays counts of vulnerabilities by severity for each artifact. Use `--output-dir` to download the reports for all artifacts to a directory.
 
 
 ```bash
@@ -251,6 +257,9 @@ hrbcli scanner reports myproject --summary
 
 # SBOM reports for a repository
 hrbcli scanner reports myproject/myrepo --type sbom
+
+# Download all vulnerability reports in a project
+hrbcli scanner reports myproject --output-dir reports
 ```
 
 ### Label Management
