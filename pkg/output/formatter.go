@@ -54,6 +54,27 @@ func YAML(data interface{}) error {
 	return encoder.Encode(data)
 }
 
+// WriteFile writes data to the specified path in the given format.
+// Format can be "json" or "yaml". Any other value defaults to JSON.
+func WriteFile(path string, format string, data interface{}) error {
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	switch strings.ToLower(format) {
+	case "yaml":
+		enc := yaml.NewEncoder(f)
+		enc.SetIndent(2)
+		return enc.Encode(data)
+	default:
+		enc := json.NewEncoder(f)
+		enc.SetIndent("", "  ")
+		return enc.Encode(data)
+	}
+}
+
 // Table creates a new table writer
 func Table() *tablewriter.Table {
 	table := tablewriter.NewWriter(os.Stdout)
