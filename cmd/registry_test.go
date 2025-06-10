@@ -19,7 +19,7 @@ type recordedReq struct {
 }
 
 func setupEnv(url string) {
-	os.Setenv("HARBOR_HARBOR_URL", url)
+	os.Setenv("HARBOR_URL", url)
 	viper.Reset()
 	initConfig()
 }
@@ -46,7 +46,7 @@ func TestNewRegistryCreateCmd(t *testing.T) {
 	defer server.Close()
 
 	setupEnv(server.URL)
-	defer os.Unsetenv("HARBOR_HARBOR_URL")
+	defer os.Unsetenv("HARBOR_URL")
 
 	cmd := newRegistryCreateCmd()
 	cmd.Flags().Set("url", "https://example.com")
@@ -86,7 +86,7 @@ func TestNewRegistryUpdateCmd(t *testing.T) {
 	defer server.Close()
 
 	setupEnv(server.URL)
-	defer os.Unsetenv("HARBOR_HARBOR_URL")
+	defer os.Unsetenv("HARBOR_URL")
 
 	cmd := newRegistryUpdateCmd()
 	cmd.Flags().Set("description", "newdesc")
