@@ -341,23 +341,26 @@ hrbcli system health --component jobservice
 
 #### `hrbcli system config get`
 
-Retrieve Harbor configuration values.
+
+Get Harbor system configuration.
 
 ```bash
-# Get all configuration
+# Show all configuration
 hrbcli system config get
 
-# Get specific key
+# Show specific value
+
 hrbcli system config get auth_mode
 ```
 
 #### `hrbcli system config set`
 
-Update Harbor configuration values.
+
+Update Harbor system configuration.
 
 ```bash
-# Enable self-registration
-hrbcli system config set self_registration true
+hrbcli system config set read_only true
+
 ```
 
 #### `hrbcli system gc`

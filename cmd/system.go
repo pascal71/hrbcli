@@ -82,9 +82,9 @@ func newSystemStatisticsCmd() *cobra.Command {
 func newSystemConfigCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config",
-		Short: "Manage Harbor configuration",
-	}
 
+		Short: "Manage Harbor system configuration",
+	}
 	cmd.AddCommand(newSystemConfigGetCmd())
 	cmd.AddCommand(newSystemConfigSetCmd())
 
@@ -94,7 +94,9 @@ func newSystemConfigCmd() *cobra.Command {
 func newSystemConfigGetCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "get [key]",
-		Short: "Get Harbor configuration",
+
+		Short: "Get Harbor system configuration",
+
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := api.NewClient()
@@ -102,81 +104,61 @@ func newSystemConfigGetCmd() *cobra.Command {
 				return err
 			}
 
-			sysSvc := harbor.NewSystemService(client)
-
-			cfg, err := sysSvc.GetConfig()
+			svc := harbor.NewConfigService(client)
+			cfg, err := svc.Get()
 			if err != nil {
 				return fmt.Errorf("failed to get configuration: %w", err)
 			}
-
 			if len(args) == 1 {
-				key := args[0]
-				val, ok := cfg[key]
+				val, ok := cfg[args[0]]
 				if !ok {
-					return fmt.Errorf("configuration key '%s' not found", key)
+					return fmt.Errorf("configuration key '%s' not found", args[0])
 				}
-				switch output.GetFormat() {
-				case "json":
-					return output.JSON(val)
-				case "yaml":
-					return output.YAML(val)
-				default:
-					fmt.Printf("%s: %v\n", key, val)
-					return nil
-				}
+				fmt.Printf("%s: %v\n", args[0], val)
+				return nil
 			}
-
 			switch output.GetFormat() {
 			case "json":
 				return output.JSON(cfg)
-			case "yaml":
-				return output.YAML(cfg)
 			default:
-				table := output.Table()
-				table.Append([]string{"KEY", "VALUE"})
-				keys := make([]string, 0, len(cfg))
-				for k := range cfg {
-					keys = append(keys, k)
-				}
-				sort.Strings(keys)
-				for _, k := range keys {
-					table.Append([]string{k, fmt.Sprintf("%v", cfg[k])})
-				}
-				table.Render()
-				return nil
+				return output.YAML(cfg)
 			}
 		},
 	}
 }
 
+func parseConfigValue(val string) interface{} {
+	if i, err := strconv.Atoi(val); err == nil {
+		return i
+	}
+	if val == "true" {
+		return true
+	}
+	if val == "false" {
+		return false
+	}
+	return val
+}
+
 func newSystemConfigSetCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "set <key> <value>",
-		Short: "Set Harbor configuration value",
-		Args:  requireArgs(2, "requires <key> <value>"),
+		Short: "Set Harbor system configuration",
+		Args:  requireArgs(2, "requires <key> and <value>"),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			key := args[0]
-			value := args[1]
-
-			var typed interface{} = value
-			if value == "true" {
-				typed = true
-			} else if value == "false" {
-				typed = false
-			}
 
 			client, err := api.NewClient()
 			if err != nil {
 				return err
 			}
 
-			sysSvc := harbor.NewSystemService(client)
-			update := map[string]interface{}{key: typed}
-			if err := sysSvc.UpdateConfig(update); err != nil {
+			svc := harbor.NewConfigService(client)
+			cfg := map[string]interface{}{args[0]: parseConfigValue(args[1])}
+			if err := svc.Update(cfg); err != nil {
 				return fmt.Errorf("failed to update configuration: %w", err)
 			}
+			output.Success("Updated %s", args[0])
 
-			output.Success("Updated %s", key)
 			return nil
 		},
 	}
