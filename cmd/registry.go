@@ -143,9 +143,69 @@ func newRegistryCreateCmd() *cobra.Command {
 			var name string
 
 			if interactive {
-				// Interactive mode code here...
-				output.Info("Interactive mode not fully implemented yet")
-				return fmt.Errorf("please use command line flags")
+				namePrompt := promptui.Prompt{Label: "Name", Validate: func(input string) error {
+					if strings.TrimSpace(input) == "" {
+						return fmt.Errorf("name is required")
+					}
+					return nil
+				}}
+				n, err := namePrompt.Run()
+				if err != nil {
+					return err
+				}
+				name = n
+
+				// Select registry type
+				types := []string{
+					api.RegistryTypeAWS,
+					api.RegistryTypeAzureACR,
+					api.RegistryTypeDockerHub,
+					api.RegistryTypeDockerRegistry,
+					api.RegistryTypeGitlab,
+					api.RegistryTypeGoogleGCR,
+					api.RegistryTypeHarbor,
+					api.RegistryTypeQuay,
+				}
+				sort.Strings(types)
+				typePrompt := promptui.Select{Label: "Type", Items: types}
+				_, t, err := typePrompt.Run()
+				if err != nil {
+					return err
+				}
+				regType = t
+
+				urlPrompt := promptui.Prompt{Label: "URL", Default: getDefaultURL(regType), Validate: func(input string) error {
+					if strings.TrimSpace(input) == "" {
+						return fmt.Errorf("url is required")
+					}
+					return nil
+				}}
+				u, err := urlPrompt.Run()
+				if err != nil {
+					return err
+				}
+				url = u
+
+				descPrompt := promptui.Prompt{Label: "Description", AllowEdit: true}
+				description, _ = descPrompt.Run()
+
+				insecureSel := promptui.Select{Label: "Skip TLS Verification", Items: []string{"false", "true"}}
+				_, insVal, err := insecureSel.Run()
+				if err != nil {
+					return err
+				}
+				insecure = insVal == "true"
+
+				userPrompt := promptui.Prompt{Label: "Username", AllowEdit: true}
+				username, _ = userPrompt.Run()
+				if strings.TrimSpace(username) != "" {
+					passPrompt := promptui.Prompt{Label: "Password", Mask: '*'}
+					p, err := passPrompt.Run()
+					if err != nil {
+						return err
+					}
+					password = p
+				}
 			} else {
 				name = args[0]
 
@@ -279,9 +339,9 @@ func newRegistryUpdateCmd() *cobra.Command {
 	var (
 		url         string
 		description string
-		// insecure    *bool
-		username string
-		password string
+		insecureVal *bool
+		username    string
+		password    string
 	)
 
 	cmd := &cobra.Command{
@@ -290,8 +350,54 @@ func newRegistryUpdateCmd() *cobra.Command {
 		Long:  `Update an existing registry endpoint configuration.`,
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// Implementation here...
-			output.Info("Update command not fully implemented yet")
+			id, err := strconv.ParseInt(args[0], 10, 64)
+			if err != nil {
+				return fmt.Errorf("invalid registry ID: %s", args[0])
+			}
+
+			client, err := api.NewClient()
+			if err != nil {
+				return err
+			}
+
+			registrySvc := harbor.NewRegistryService(client)
+
+			// Get current registry so we can preserve existing values
+			current, err := registrySvc.Get(id)
+			if err != nil {
+				return fmt.Errorf("failed to get registry: %w", err)
+			}
+
+			req := &api.RegistryReq{
+				Name:        current.Name,
+				URL:         current.URL,
+				Description: current.Description,
+				Type:        current.Type,
+				Insecure:    current.Insecure,
+			}
+
+			if url != "" {
+				req.URL = url
+			}
+			if description != "" {
+				req.Description = description
+			}
+			if insecureVal != nil {
+				req.Insecure = *insecureVal
+			}
+			if username != "" || password != "" {
+				req.Credential = &api.Credential{
+					Type:         "basic",
+					AccessKey:    username,
+					AccessSecret: password,
+				}
+			}
+
+			if err := registrySvc.Update(id, req); err != nil {
+				return fmt.Errorf("failed to update registry: %w", err)
+			}
+
+			output.Success("Registry %d updated", id)
 			return nil
 		},
 	}
@@ -301,6 +407,14 @@ func newRegistryUpdateCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&dummyBool, "insecure", false, "Skip TLS verification")
 	cmd.Flags().StringVar(&username, "username", "", "Registry username")
 	cmd.Flags().StringVar(&password, "password", "", "Registry password")
+
+	cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+		if cmd.Flags().Changed("insecure") {
+			val, _ := cmd.Flags().GetBool("insecure")
+			insecureVal = &val
+		}
+		return nil
+	}
 
 	return cmd
 }
