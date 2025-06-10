@@ -92,6 +92,7 @@ func init() {
 	rootCmd.AddCommand(NewProjectCmd())
 	rootCmd.AddCommand(NewRegistryCmd())
 	rootCmd.AddCommand(NewArtifactCmd())
+	rootCmd.AddCommand(NewLabelCmd())
 	rootCmd.AddCommand(NewUserCmd())
 	rootCmd.AddCommand(NewRepositoryCmd())
 	rootCmd.AddCommand(NewReplicationCmd())
