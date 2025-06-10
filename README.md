@@ -16,6 +16,8 @@ A powerful command-line interface for [Harbor](https://goharbor.io/) container r
 - 🔄 **Shell Completions** - Bash, Zsh, and Fish shell completions
 - 🚚 **Distribution Management** - Manage preheat providers and policies
 - 🛠 **System Configuration** - View and update Harbor system settings
+- 🔌 **Registry Endpoint Management** - Configure external registries for replication or proxy cache
+- 📊 **Job Service Monitoring** - Inspect worker pools and queue lengths
 
 ## Installation
 

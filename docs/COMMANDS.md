@@ -79,6 +79,80 @@ hrbcli project update myproject --storage-limit 20G
 hrbcli project update myproject --enable-content-trust
 ```
 
+### Registry Management
+
+#### `hrbcli registry list`
+
+List registry endpoints configured in Harbor.
+
+```bash
+# List all registries
+hrbcli registry list
+
+# Search by name
+hrbcli registry list --query docker
+```
+
+#### `hrbcli registry create`
+
+Create a new registry endpoint. Use `--interactive` to be prompted for values.
+
+```bash
+# Create Docker Hub endpoint
+hrbcli registry create dockerhub --type docker-hub --url https://hub.docker.com
+
+# Interactive mode
+hrbcli registry create --interactive
+```
+
+#### `hrbcli registry get`
+
+Show details of a registry endpoint.
+
+```bash
+hrbcli registry get 1
+```
+
+#### `hrbcli registry update`
+
+Update an existing registry configuration.
+
+```bash
+hrbcli registry update 1 --description "Updated"
+```
+
+#### `hrbcli registry delete`
+
+Delete a registry endpoint.
+
+```bash
+hrbcli registry delete 1
+```
+
+#### `hrbcli registry ping`
+
+Verify connectivity with a registry endpoint.
+
+```bash
+hrbcli registry ping --url https://registry.example.com --type docker-registry
+```
+
+#### `hrbcli registry adapters`
+
+List available registry adapters.
+
+```bash
+hrbcli registry adapters
+```
+
+#### `hrbcli registry adapter-info`
+
+Show detailed information about an adapter type.
+
+```bash
+hrbcli registry adapter-info docker-hub
+```
+
 ### Repository Management
 
 #### `hrbcli repo list`
@@ -578,6 +652,26 @@ List all configuration.
 
 ```bash
 hrbcli config list
+```
+
+### Shell Completion
+
+Generate completion scripts for your shell.
+
+```bash
+# Bash completion
+hrbcli completion bash > /etc/bash_completion.d/hrbcli
+
+# Zsh completion
+hrbcli completion zsh > _hrbcli
+```
+
+### Version Information
+
+Display the CLI version and build details.
+
+```bash
+hrbcli version
 ```
 
 ## Examples
