@@ -40,7 +40,7 @@ func newRepoListCmd() *cobra.Command {
 		Use:   "list <project>",
 		Short: "List repositories",
 		Long:  `List repositories in a project.`,
-		Args:  cobra.ExactArgs(1),
+		Args:  requireArgs(1, "requires <project>"),
 		Example: `  # List repositories
   hrbcli repo list myproject
 
@@ -140,7 +140,7 @@ func newRepoGetCmd() *cobra.Command {
 		Use:   "get <project>/<repository>",
 		Short: "Get repository details",
 		Long:  `Get detailed information about a repository.`,
-		Args:  cobra.ExactArgs(1),
+		Args:  requireArgs(1, "requires <project>/<repository>"),
 		Example: `  # Get repository details
   hrbcli repo get myproject/myrepo
 

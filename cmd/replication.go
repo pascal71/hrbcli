@@ -73,7 +73,7 @@ func newReplicationGetCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get <id>",
 		Short: "Show replication policy",
-		Args:  cobra.ExactArgs(1),
+		Args:  requireArgs(1, "requires <id>"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := strconv.ParseInt(args[0], 10, 64)
 			if err != nil {
@@ -140,7 +140,7 @@ func newReplicationDeleteCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <id>",
 		Short: "Delete replication policy",
-		Args:  cobra.ExactArgs(1),
+		Args:  requireArgs(1, "requires <id>"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := strconv.ParseInt(args[0], 10, 64)
 			if err != nil {
@@ -265,7 +265,7 @@ func newReplicationExecutionCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "execution <id>",
 		Short: "Show execution details",
-		Args:  cobra.ExactArgs(1),
+		Args:  requireArgs(1, "requires <id>"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := strconv.ParseInt(args[0], 10, 64)
 			if err != nil {
@@ -305,7 +305,7 @@ func newReplicationLogsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "logs <execution-id>",
 		Short: "Show execution logs",
-		Args:  cobra.ExactArgs(1),
+		Args:  requireArgs(1, "requires <execution-id>"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := strconv.ParseInt(args[0], 10, 64)
 			if err != nil {

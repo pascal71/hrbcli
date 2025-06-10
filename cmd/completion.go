@@ -14,7 +14,7 @@ func NewCompletionCmd() *cobra.Command {
 		Long:                  `Generate shell completion script for various shells.`,
 		DisableFlagsInUseLine: true,
 		ValidArgs:             []string{"bash", "zsh", "fish", "powershell"},
-		Args:                  cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
+		Args:                  cobra.MatchAll(requireArgs(1, "requires one of: bash|zsh|fish|powershell"), cobra.OnlyValidArgs),
 		Run: func(cmd *cobra.Command, args []string) {
 			switch args[0] {
 			case "bash":

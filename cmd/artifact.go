@@ -35,7 +35,7 @@ func newArtifactScanCmd() *cobra.Command {
 		Use:   "scan <project>/<repository>[:tag|@digest]",
 		Short: "Scan an image",
 		Long:  `Trigger vulnerability scan for a specific image in Harbor.`,
-		Args:  cobra.ExactArgs(1),
+		Args:  requireArgs(1, "requires <project>/<repository>[:tag|@digest]"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			project, repo, ref, err := parseArtifactRef(args[0])
 			if err != nil {
@@ -116,7 +116,7 @@ func newArtifactListCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list <project>[/<repository>]",
 		Short: "List artifacts",
-		Args:  cobra.ExactArgs(1),
+		Args:  requireArgs(1, "requires <project>[/<repository>]"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			project, repo, err := parseProjectRepo(args[0])
 			if err != nil {
@@ -234,7 +234,7 @@ func newArtifactVulnCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "vulnerabilities <project>/<repository>[:tag|@digest]",
 		Short: "Show vulnerability report",
-		Args:  cobra.ExactArgs(1),
+		Args:  requireArgs(1, "requires <project>/<repository>[:tag|@digest]"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			project, repo, ref, err := parseArtifactRef(args[0])
 			if err != nil {
@@ -303,7 +303,7 @@ func newArtifactSbomCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sbom <project>/<repository>[:tag|@digest]",
 		Short: "Show SBOM report",
-		Args:  cobra.ExactArgs(1),
+		Args:  requireArgs(1, "requires <project>/<repository>[:tag|@digest]"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			project, repo, ref, err := parseArtifactRef(args[0])
 			if err != nil {
@@ -343,7 +343,7 @@ func newArtifactGetCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get <project>/<repository>[:tag|@digest]",
 		Short: "Get artifact details",
-		Args:  cobra.ExactArgs(1),
+		Args:  requireArgs(1, "requires <project>/<repository>[:tag|@digest]"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			project, repo, ref, err := parseArtifactRef(args[0])
 			if err != nil {

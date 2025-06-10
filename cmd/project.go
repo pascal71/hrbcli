@@ -167,7 +167,7 @@ func newProjectCreateCmd() *cobra.Command {
 
   # Create with security settings
   hrbcli project create secure-proj --enable-content-trust --prevent-vulnerable --auto-scan`,
-		Args: cobra.ExactArgs(1),
+		Args: requireArgs(1, "requires <name>"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			projectName := args[0]
 
@@ -315,7 +315,7 @@ func newProjectGetCmd() *cobra.Command {
 		Use:   "get <name>",
 		Short: "Get project details",
 		Long:  `Get detailed information about a specific project.`,
-		Args:  cobra.ExactArgs(1),
+		Args:  requireArgs(1, "requires <name>"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			projectName := args[0]
 
@@ -439,7 +439,7 @@ func newProjectUpdateCmd() *cobra.Command {
 
   # Enable security features
   hrbcli project update myproject --enable-content-trust=true --auto-scan=true`,
-		Args: cobra.ExactArgs(1),
+		Args: requireArgs(1, "requires <name>"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			projectName := args[0]
 
@@ -581,7 +581,7 @@ func newProjectDeleteCmd() *cobra.Command {
 		Use:   "delete <name>",
 		Short: "Delete a project",
 		Long:  `Delete a project. The project must be empty (no repositories).`,
-		Args:  cobra.ExactArgs(1),
+		Args:  requireArgs(1, "requires <name>"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			projectName := args[0]
 
@@ -640,7 +640,7 @@ func newProjectExistsCmd() *cobra.Command {
 		Use:   "exists <name>",
 		Short: "Check if a project exists",
 		Long:  `Check if a project exists. Returns exit code 0 if exists, 1 if not.`,
-		Args:  cobra.ExactArgs(1),
+		Args:  requireArgs(1, "requires <name>"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			projectName := args[0]
 
