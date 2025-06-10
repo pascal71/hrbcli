@@ -14,6 +14,7 @@ A powerful command-line interface for [Harbor](https://goharbor.io/) container r
 - 🎨 **Interactive Mode** - Prompts for missing required information
 - 📚 **Comprehensive Documentation** - Built-in help for all commands
 - 🔄 **Shell Completions** - Bash, Zsh, and Fish shell completions
+- 🚚 **Distribution Management** - Manage preheat providers and policies
 
 ## Installation
 
@@ -90,6 +91,13 @@ hrbcli system statistics
 hrbcli scanner scan <project>
 hrbcli scanner running <project>
 hrbcli scanner reports <project> --summary
+```
+
+### Distribution Commands
+
+```bash
+hrbcli distribution providers <project>
+hrbcli distribution policies <project>
 ```
 
 See [docs/COMMANDS.md](docs/COMMANDS.md) for more details.
