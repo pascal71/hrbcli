@@ -322,7 +322,7 @@ hrbcli scanner scan myproject/myrepo
 
 #### `hrbcli scanner reports`
 
-Retrieve vulnerability or SBOM reports for artifacts in a project or repository. When used with `--summary`, displays counts of vulnerabilities by severity for each artifact. Use `--output-dir` to download the reports for all artifacts to a directory. Results are sorted by vulnerability count by default; use `--sort` and `--reverse` to change ordering.
+Retrieve vulnerability or SBOM reports for artifacts in a project or repository. When used with `--summary`, displays counts of vulnerabilities by severity for each artifact. Use `--output-dir` to download the reports for all artifacts to a directory. Results are sorted by severity (critical, high, medium, low, total, repository) by default; use `--sort` and `--reverse` to change ordering.
 
 
 ```bash
