@@ -227,6 +227,11 @@ func newScannerReportsCmd() *cobra.Command {
 				Reference  string      `json:"reference"`
 				Report     interface{} `json:"report"`
 				Count      int         `json:"count,omitempty"`
+				Critical   int         `json:"critical,omitempty"`
+				High       int         `json:"high,omitempty"`
+				Medium     int         `json:"medium,omitempty"`
+				Low        int         `json:"low,omitempty"`
+				Total      int         `json:"total,omitempty"`
 			}
 			var reports []entry
 
@@ -255,10 +260,18 @@ func newScannerReportsCmd() *cobra.Command {
 							output.Success("Saved report to %s", path)
 						} else {
 							c := 0
+							crit := 0
+							high := 0
+							med := 0
+							low := 0
 							for _, ov := range a.ScanOverview {
 								c += ov.Summary.Total
+								crit += ov.Summary.Summary["Critical"]
+								high += ov.Summary.Summary["High"]
+								med += ov.Summary.Summary["Medium"]
+								low += ov.Summary.Summary["Low"]
 							}
-							reports = append(reports, entry{Repository: r, Reference: ref, Report: a.ScanOverview, Count: c})
+							reports = append(reports, entry{Repository: r, Reference: ref, Report: a.ScanOverview, Count: c, Critical: crit, High: high, Medium: med, Low: low, Total: c})
 						}
 						continue
 					}
@@ -321,7 +334,8 @@ func newScannerReportsCmd() *cobra.Command {
 			}
 
 			sort.SliceStable(reports, func(i, j int) bool {
-				switch strings.ToLower(sortBy) {
+				field := strings.ToLower(sortBy)
+				switch field {
 				case "repo", "repository":
 					if reverse {
 						return reports[i].Repository > reports[j].Repository
@@ -332,11 +346,72 @@ func newScannerReportsCmd() *cobra.Command {
 						return reports[i].Reference > reports[j].Reference
 					}
 					return reports[i].Reference < reports[j].Reference
-				default:
+				case "vuln":
 					if reverse {
 						return reports[i].Count < reports[j].Count
 					}
 					return reports[i].Count > reports[j].Count
+				case "crit", "critical":
+					if reverse {
+						return reports[i].Critical < reports[j].Critical
+					}
+					return reports[i].Critical > reports[j].Critical
+				case "high":
+					if reverse {
+						return reports[i].High < reports[j].High
+					}
+					return reports[i].High > reports[j].High
+				case "med", "medium":
+					if reverse {
+						return reports[i].Medium < reports[j].Medium
+					}
+					return reports[i].Medium > reports[j].Medium
+				case "low":
+					if reverse {
+						return reports[i].Low < reports[j].Low
+					}
+					return reports[i].Low > reports[j].Low
+				case "total":
+					if reverse {
+						return reports[i].Total < reports[j].Total
+					}
+					return reports[i].Total > reports[j].Total
+				default:
+					// default severity sort
+					if reports[i].Critical != reports[j].Critical {
+						if reverse {
+							return reports[i].Critical < reports[j].Critical
+						}
+						return reports[i].Critical > reports[j].Critical
+					}
+					if reports[i].High != reports[j].High {
+						if reverse {
+							return reports[i].High < reports[j].High
+						}
+						return reports[i].High > reports[j].High
+					}
+					if reports[i].Medium != reports[j].Medium {
+						if reverse {
+							return reports[i].Medium < reports[j].Medium
+						}
+						return reports[i].Medium > reports[j].Medium
+					}
+					if reports[i].Low != reports[j].Low {
+						if reverse {
+							return reports[i].Low < reports[j].Low
+						}
+						return reports[i].Low > reports[j].Low
+					}
+					if reports[i].Total != reports[j].Total {
+						if reverse {
+							return reports[i].Total < reports[j].Total
+						}
+						return reports[i].Total > reports[j].Total
+					}
+					if reverse {
+						return reports[i].Repository > reports[j].Repository
+					}
+					return reports[i].Repository < reports[j].Repository
 				}
 			})
 
@@ -404,7 +479,7 @@ func newScannerReportsCmd() *cobra.Command {
 	cmd.Flags().StringVar(&reportType, "type", "vulnerability", "Report type (vulnerability|sbom)")
 	cmd.Flags().BoolVar(&summary, "summary", false, "Show summary instead of full report")
 	cmd.Flags().StringVar(&outputDir, "output-dir", "", "Directory to save reports")
-	cmd.Flags().StringVar(&sortBy, "sort", "vuln", "Sort by field (vuln|repo|ref)")
+	cmd.Flags().StringVar(&sortBy, "sort", "severity", "Sort by field (severity|crit|high|medium|low|total|vuln|repo|ref)")
 	cmd.Flags().BoolVar(&reverse, "reverse", false, "Reverse sort order")
 
 	return cmd
