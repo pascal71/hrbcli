@@ -281,8 +281,17 @@ func newArtifactVulnCmd() *cobra.Command {
 				return fmt.Errorf("failed to get vulnerabilities: %w", err)
 			}
 
-			if report == nil || len(report.Vulnerabilities) == 0 {
+			if report == nil {
 				output.Info("No vulnerabilities found")
+				return nil
+			}
+
+			if len(report.Vulnerabilities) == 0 {
+				if report.Summary.Total == 0 {
+					output.Info("No vulnerabilities found")
+					return nil
+				}
+				output.Info("%d vulnerabilities found (summary only)", report.Summary.Total)
 				return nil
 			}
 
