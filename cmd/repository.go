@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 
 	"github.com/pascal71/hrbcli/pkg/api"
@@ -23,6 +24,8 @@ func NewRepositoryCmd() *cobra.Command {
 
 	cmd.AddCommand(newRepoListCmd())
 	cmd.AddCommand(newRepoGetCmd())
+	cmd.AddCommand(newRepoDeleteCmd())
+	cmd.AddCommand(newRepoTagsCmd())
 
 	return cmd
 }
@@ -185,5 +188,126 @@ func newRepoGetCmd() *cobra.Command {
 	}
 
 	cmd.Flags().BoolVar(&detail, "detail", false, "Show creation and update times")
+	return cmd
+}
+
+func newRepoDeleteCmd() *cobra.Command {
+	var force bool
+	cmd := &cobra.Command{
+		Use:   "delete <project>/<repository>[<:tag>|@digest]",
+		Short: "Delete repository or tag",
+		Args:  requireArgs(1, "requires <project>/<repository>[:tag]"),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			input := args[0]
+			project, repo, ref := "", "", ""
+			if strings.ContainsAny(input, ":@") {
+				p, r, rr, err := parseArtifactRef(input)
+				if err != nil {
+					return err
+				}
+				project, repo, ref = p, r, rr
+			} else {
+				var err error
+				project, repo, err = parseRepoRef(input)
+				if err != nil {
+					return err
+				}
+			}
+
+			client, err := api.NewClient()
+			if err != nil {
+				return err
+			}
+
+			repoSvc := harbor.NewRepositoryService(client)
+			artSvc := harbor.NewArtifactService(client)
+
+			if ref != "" {
+				if err := artSvc.Delete(project, repo, ref); err != nil {
+					return fmt.Errorf("failed to delete artifact: %w", err)
+				}
+				output.Success("Deleted %s/%s:%s", project, repo, ref)
+				return nil
+			}
+
+			if !force {
+				prompt := promptui.Prompt{Label: fmt.Sprintf("Delete repository '%s/%s'", project, repo), IsConfirm: true}
+				result, err := prompt.Run()
+				if err != nil || strings.ToLower(result) != "y" {
+					output.Info("Deletion cancelled")
+					return nil
+				}
+			}
+
+			if err := repoSvc.Delete(project, repo); err != nil {
+				return fmt.Errorf("failed to delete repository: %w", err)
+			}
+			output.Success("Deleted repository %s/%s", project, repo)
+			return nil
+		},
+	}
+	cmd.Flags().BoolVar(&force, "force", false, "Force deletion without confirmation")
+	return cmd
+}
+
+func newRepoTagsCmd() *cobra.Command {
+	var detail bool
+	var filter string
+	var page, pageSize int
+	cmd := &cobra.Command{
+		Use:   "tags <project>/<repository>",
+		Short: "List tags for repository",
+		Args:  requireArgs(1, "requires <project>/<repository>"),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			project, repo, err := parseRepoRef(args[0])
+			if err != nil {
+				return err
+			}
+
+			client, err := api.NewClient()
+			if err != nil {
+				return err
+			}
+
+			repoSvc := harbor.NewRepositoryService(client)
+			opts := &api.ListOptions{Query: filter, Page: page, PageSize: pageSize}
+			tags, err := repoSvc.ListTags(project, repo, opts)
+			if err != nil {
+				return fmt.Errorf("failed to list tags: %w", err)
+			}
+
+			if len(tags) == 0 {
+				output.Info("No tags found")
+				return nil
+			}
+
+			switch output.GetFormat() {
+			case "json":
+				return output.JSON(tags)
+			case "yaml":
+				return output.YAML(tags)
+			default:
+				table := output.Table()
+				headers := []string{"NAME"}
+				if detail {
+					headers = append(headers, "IMMUTABLE")
+				}
+				table.Append(headers)
+				for _, t := range tags {
+					row := []string{t.Name}
+					if detail {
+						row = append(row, strconv.FormatBool(t.Immutable))
+					}
+					table.Append(row)
+				}
+				table.Render()
+				return nil
+			}
+		},
+	}
+	cmd.Flags().BoolVar(&detail, "detail", false, "Show immutable flag")
+	cmd.Flags().StringVar(&filter, "filter", "", "Filter by tag name")
+	cmd.Flags().IntVar(&page, "page", 1, "Page number")
+	cmd.Flags().IntVar(&pageSize, "page-size", 20, "Page size")
 	return cmd
 }

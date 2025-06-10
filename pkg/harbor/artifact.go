@@ -170,3 +170,22 @@ func (s *ArtifactService) SBOM(project, repository, reference string) (map[strin
 
 	return report, nil
 }
+
+// Delete removes the specified artifact identified by tag or digest.
+func (s *ArtifactService) Delete(project, repository, reference string) error {
+	projectEsc := url.PathEscape(project)
+	repoEsc := url.PathEscape(repository)
+	refEsc := url.PathEscape(reference)
+	path := fmt.Sprintf("/projects/%s/repositories/%s/artifacts/%s", projectEsc, repoEsc, refEsc)
+
+	resp, err := s.client.Delete(path)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+	return nil
+}
