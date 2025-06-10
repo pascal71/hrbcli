@@ -99,7 +99,7 @@ See [docs/COMMANDS.md](docs/COMMANDS.md) for more details.
 Harbor CLI can be configured through:
 
 1. **Configuration file** (`~/.hrbcli.yaml`)
-2. **Environment variables** (prefixed with `HARBOR_`)
+2. **Environment variables** (`HARBOR_URL`, `HARBOR_USERNAME`, `HARBOR_PASSWORD`)
 3. **Command-line flags**
 
 ### Configuration File Example
