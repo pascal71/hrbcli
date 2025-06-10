@@ -118,8 +118,10 @@ func initConfig() {
 		viper.SetConfigFile(configPath)
 	}
 
-	// Set env prefix
-	viper.SetEnvPrefix("HARBOR")
+	// Bind environment variables explicitly
+	viper.BindEnv("harbor_url", "HARBOR_URL")
+	viper.BindEnv("username", "HARBOR_USERNAME")
+	viper.BindEnv("password", "HARBOR_PASSWORD")
 	viper.AutomaticEnv()
 
 	// Read config file if it exists

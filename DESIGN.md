@@ -138,7 +138,7 @@ Testing infrastructure:
 ## Configuration Hierarchy
 
 1. Command-line flags (highest priority)
-2. Environment variables (HARBOR_*)
+2. Environment variables (`HARBOR_URL`, `HARBOR_USERNAME`, `HARBOR_PASSWORD`)
 3. Configuration file (~/.hrbcli.yaml)
 4. Default values (lowest priority)
 
