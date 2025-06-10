@@ -1,0 +1,5 @@
+bin/hrbcli registry create opentext-reg \
+    --type docker-registry \
+    --url https://registry.opentext.com/v2 \
+    --username "pascal.vandam.external@atos.net" \
+    --password "T1ngelfantje!"
