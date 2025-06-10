@@ -22,7 +22,7 @@ func NewProjectService(client *api.Client) *ProjectService {
 // List lists projects
 func (s *ProjectService) List(opts *api.ListOptions) ([]*api.Project, error) {
 	params := make(map[string]string)
-	
+
 	if opts != nil {
 		if opts.Page > 0 {
 			params["page"] = strconv.Itoa(opts.Page)
@@ -37,17 +37,17 @@ func (s *ProjectService) List(opts *api.ListOptions) ([]*api.Project, error) {
 			params["sort"] = opts.Sort
 		}
 	}
-	
+
 	resp, err := s.client.Get("/projects", params)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var projects []*api.Project
 	if err := s.client.DecodeResponse(resp, &projects); err != nil {
 		return nil, fmt.Errorf("failed to decode projects: %w", err)
 	}
-	
+
 	return projects, nil
 }
 
@@ -57,12 +57,12 @@ func (s *ProjectService) Get(nameOrID string) (*api.Project, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var project api.Project
 	if err := s.client.DecodeResponse(resp, &project); err != nil {
 		return nil, fmt.Errorf("failed to decode project: %w", err)
 	}
-	
+
 	return &project, nil
 }
 
@@ -73,11 +73,11 @@ func (s *ProjectService) Create(req *api.ProjectReq) error {
 		return err
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusCreated {
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
-	
+
 	return nil
 }
 
@@ -88,11 +88,11 @@ func (s *ProjectService) Update(nameOrID string, req *api.ProjectReq) error {
 		return err
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
-	
+
 	return nil
 }
 
@@ -103,11 +103,11 @@ func (s *ProjectService) Delete(nameOrID string) error {
 		return err
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
-	
+
 	return nil
 }
 
@@ -117,12 +117,12 @@ func (s *ProjectService) GetSummary(nameOrID string) (*api.ProjectSummary, error
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var summary api.ProjectSummary
 	if err := s.client.DecodeResponse(resp, &summary); err != nil {
 		return nil, fmt.Errorf("failed to decode project summary: %w", err)
 	}
-	
+
 	return &summary, nil
 }
 
@@ -136,7 +136,7 @@ func (s *ProjectService) Exists(projectName string) (bool, error) {
 		return false, err
 	}
 	defer resp.Body.Close()
-	
+
 	return resp.StatusCode == http.StatusOK, nil
 }
 
@@ -153,12 +153,12 @@ func ParseStorageLimit(limit string) (int64, error) {
 	if limit == "" || limit == "-1" {
 		return -1, nil
 	}
-	
+
 	limit = strings.ToUpper(strings.TrimSpace(limit))
-	
+
 	var multiplier int64 = 1
 	var numStr string
-	
+
 	switch {
 	case strings.HasSuffix(limit, "T"):
 		multiplier = 1024 * 1024 * 1024 * 1024
@@ -175,12 +175,12 @@ func ParseStorageLimit(limit string) (int64, error) {
 	default:
 		numStr = limit
 	}
-	
+
 	num, err := strconv.ParseFloat(numStr, 64)
 	if err != nil {
 		return 0, fmt.Errorf("invalid storage limit format: %s", limit)
 	}
-	
+
 	return int64(num * float64(multiplier)), nil
 }
 
@@ -189,17 +189,17 @@ func FormatStorageSize(bytes int64) string {
 	if bytes < 0 {
 		return "unlimited"
 	}
-	
+
 	const unit = 1024
 	if bytes < unit {
 		return fmt.Sprintf("%d B", bytes)
 	}
-	
+
 	div, exp := int64(unit), 0
 	for n := bytes / unit; n >= unit; n /= unit {
 		div *= unit
 		exp++
 	}
-	
+
 	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
 }

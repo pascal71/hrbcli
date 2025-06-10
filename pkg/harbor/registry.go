@@ -161,7 +161,6 @@ func (s *RegistryService) GetInfo(registryType string) (*api.RegistryInfo, error
 
 // ListAdapters lists available registry adapters
 
-
 func (s *RegistryService) ListAdapters() (map[string]*api.RegistryInfo, error) {
 	resp, err := s.client.Get("/replication/adapterinfos", nil)
 	if err != nil {

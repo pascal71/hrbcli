@@ -79,10 +79,6 @@ hrbcli repo delete myproject/myapp:v1.0.0
 # Get system information
 hrbcli system info
 
-
-# Backup Harbor
-hrbcli system backup --dir /backups
-
 # Show Harbor statistics
 hrbcli system statistics
 
@@ -112,6 +108,8 @@ export HARBOR_URL=https://harbor.example.com
 export HARBOR_USERNAME=admin
 export HARBOR_PASSWORD=secretpassword
 ```
+
+`HARBOR_PASSWORD` can hold either your Harbor account password or a robot account token. Set it as an environment variable to avoid storing credentials in your configuration file.
 
 ## Documentation
 

@@ -35,6 +35,12 @@ We love your input! We want to make contributing to Harbor CLI as easy and trans
    make tools
    ```
 
+6. Set your Harbor credentials:
+   ```bash
+   export HARBOR_PASSWORD=yourpassword
+   ```
+   Storing the password in an environment variable keeps it out of your configuration file. See the README's Configuration section for more details.
+
 ## Development Workflow
 
 ### 1. Create a Branch
