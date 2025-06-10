@@ -2,6 +2,7 @@ package harbor
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/pascal71/hrbcli/pkg/api"
 )
@@ -29,4 +30,54 @@ func (s *SystemService) GetStatistics() (*api.Statistic, error) {
 	}
 
 	return &stats, nil
+}
+
+// GetInfo retrieves Harbor system information.
+func (s *SystemService) GetInfo(withStorage bool) (*api.SystemInfo, error) {
+	params := make(map[string]string)
+	if withStorage {
+		params["with_storage"] = "true"
+	}
+
+	resp, err := s.client.Get("/systeminfo", params)
+	if err != nil {
+		return nil, err
+	}
+
+	var info api.SystemInfo
+	if err := s.client.DecodeResponse(resp, &info); err != nil {
+		return nil, fmt.Errorf("failed to decode system info: %w", err)
+	}
+
+	return &info, nil
+}
+
+// GetConfig retrieves Harbor configuration settings.
+func (s *SystemService) GetConfig() (map[string]interface{}, error) {
+	resp, err := s.client.Get("/configurations", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var cfg map[string]interface{}
+	if err := s.client.DecodeResponse(resp, &cfg); err != nil {
+		return nil, fmt.Errorf("failed to decode configuration: %w", err)
+	}
+
+	return cfg, nil
+}
+
+// UpdateConfig updates Harbor configuration settings.
+func (s *SystemService) UpdateConfig(cfg map[string]interface{}) error {
+	resp, err := s.client.Put("/configurations", cfg)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	return nil
 }
